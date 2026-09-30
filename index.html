@@ -55,6 +55,7 @@
     .clock-container {
       text-align: center;
       margin-top: -10px;
+      cursor: pointer;
     }
     .time-wrapper {
       display: inline-block;
@@ -103,6 +104,7 @@
       -webkit-justify-content: center;
       justify-content: center;
       margin-top: -10px;
+      cursor: pointer;
     }
     .main-icon-wrap {
       width: 120px;
@@ -239,7 +241,7 @@
       <div id="last-update">aggiornato alle --:--</div>
     </div>
     
-    <div class="clock-container">
+    <div class="clock-container" onclick="fetchWeatherData()">
       <div class="time-wrapper">
         <span id="clock-hm">--:--</span>
         <span id="clock-s" class="seconds-inline">--</span>
@@ -251,7 +253,7 @@
       </div>
     </div>
     
-    <div class="main-weather">
+    <div class="main-weather" onclick="fetchWeatherData()">
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
@@ -527,8 +529,8 @@
     }
 
     function fetchWeatherData() {
-      // Lettura interna a GitHub: stesso dominio paxos70.github.io, zero blocchi SSL/CORS
-      var targetUrl = './weather.json?t=' + new Date().getTime();
+      // Percorso assoluto sicuro: evita lo smarrimento della base path nella sandbox a schermo intero
+      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?t=' + new Date().getTime();
 
       try {
         var xhr = new XMLHttpRequest();
@@ -545,8 +547,9 @@
       } catch (err) {}
     }
 
+    // Carica subito e poi ogni 5 minuti
     fetchWeatherData();
-    setInterval(fetchWeatherData, 10 * 60 * 1000);
+    setInterval(fetchWeatherData, 5 * 60 * 1000);
   </script>
 </body>
 </html>
