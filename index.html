@@ -20,7 +20,7 @@
       height: 100%;
       background-color: #0b0c10;
       color: #fdfbf7;
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
       overflow: hidden;
     }
     #app {
@@ -236,7 +236,7 @@
   <div id="app">
     <div class="top-meta">
       <div>BARI</div>
-      <div id="last-update">aggiornato alle --:--</div>
+      <div id="last-update">collegamento in corso...</div>
     </div>
     
     <div class="clock-container">
@@ -255,7 +255,7 @@
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Poco nuvoloso</div>
+        <div class="condition-text" id="weather-desc">Rilevamento...</div>
         <div class="minmax-line">
           <span class="max-t" id="today-max">max --°</span>
           <span class="min-t" id="today-min">min --°</span>
@@ -477,7 +477,7 @@
       for (var i = 0; i < hSteps.length; i++) {
         var hIdx = hSteps[i] % 24;
         var hHour = hIdx;
-        var hTemp = 20;
+        var hTemp = 18;
         var hPop = 0;
         var hCode = 1;
 
@@ -526,56 +526,48 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
-    var defaultData = {
-      current: {
-        temperature_2m: 23,
-        relative_humidity_2m: 70,
-        apparent_temperature: 24,
-        is_day: 1,
-        weather_code: 1,
-        wind_speed_10m: 13,
-        wind_direction_10m: 315,
-        wind_gusts_10m: 34
-      },
-      daily: {
-        temperature_2m_max: [24, 24, 24, 24, 24],
-        temperature_2m_min: [17, 17, 17, 16, 15],
-        sunrise: ["06:48"],
-        sunset: ["18:36"],
-        weather_code: [1, 1, 3, 1, 0],
-        precipitation_probability_max: [0, 4, 2, 8, 2],
-        time: ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
-      },
-      hourly: {
-        time: ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"],
-        temperature_2m: [18,18,17,17,17,17,18,20,22,23,24,24,24,24,23,23,22,22,21,20,19,19,18,18],
-        weather_code: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-        precipitation_probability: [0,0,0,0,0,0,0,0,0,0,5,10,14,10,0,0,0,0,0,0,0,0,0,0]
+    // Callback globale per compatibilità universale (iOS 9 Script Injection)
+    window.onWeatherReceived = function(data) {
+      if (data && data.current) {
+        renderWeather(data);
       }
     };
 
-    // Render immediato all'apertura
-    renderWeather(defaultData);
-
     function fetchWeatherData() {
-      var url = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
+      var targetUrl = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
 
+      // 1. Metodo primario: Chiamata diretta CORS
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
+        xhr.open('GET', targetUrl, true);
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4 && xhr.status === 200) {
             try {
               var liveData = JSON.parse(xhr.responseText);
               renderWeather(liveData);
+              return;
             } catch (e) {}
           }
         };
         xhr.send();
       } catch (err) {}
+
+      // 2. Metodo per iOS 9 / Safari obsoleto: Proxy ponte compatibile HTTP/HTTPS
+      try {
+        var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl) + '&callback=onWeatherReceived';
+        var oldScript = document.getElementById('jsonp-weather');
+        if (oldScript) {
+          oldScript.parentNode.removeChild(oldScript);
+        }
+        var script = document.createElement('script');
+        script.id = 'jsonp-weather';
+        script.src = proxyUrl;
+        document.body.appendChild(script);
+      } catch (e2) {}
     }
 
-    setTimeout(fetchWeatherData, 1000);
+    // Carica subito i dati reali
+    fetchWeatherData();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
   </script>
 </body>
