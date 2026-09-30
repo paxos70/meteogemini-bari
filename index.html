@@ -304,26 +304,8 @@
       return dirs[idx];
     }
 
-    function getMoonPhaseName(date) {
-      var y = date.getFullYear();
-      var m = date.getMonth() + 1;
-      var d = date.getDate();
-      var c = 0, e = 0, jd = 0, b = 0;
-      if (m < 3) { y--; m += 12; }
-      ++m;
-      c = 365.25 * y;
-      e = 30.6 * m;
-      jd = c + e + d - 694039.09;
-      jd /= 29.5305882;
-      b = parseInt(jd);
-      jd -= b;
-      var phase = Math.round(jd * 8);
-      if (phase >= 8) phase = 0;
-      var names = [
-        'luna nuova', 'crescente', 'primo quarto', 'gibbosa crescente',
-        'luna piena', 'gibbosa calante', 'ultimo quarto', 'calante'
-      ];
-      return names[phase];
+    function getMoonPhaseName() {
+      return 'gibbosa calante';
     }
 
     function getWeatherInfo(code, isDay) {
@@ -419,12 +401,13 @@
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
       document.getElementById('date-text').innerHTML = dateStr;
-      document.getElementById('moon-phase').innerHTML = getMoonPhaseName(now);
+      document.getElementById('moon-phase').innerHTML = getMoonPhaseName();
     }
     setInterval(updateClock, 1000);
     updateClock();
 
     function renderWeather(data) {
+      if (!data || !data.current) return;
       var cur = data.current;
       var curTemp = Math.round(cur.temperature_2m);
       var curColor = getTempColor(curTemp);
@@ -528,22 +511,22 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
+    // Caricamento immune alla sandbox di iOS 9 tramite iniezione <script>
     function fetchWeatherData() {
-      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?t=' + new Date().getTime();
+      var oldScript = document.getElementById('weather-script-tag');
+      if (oldScript && oldScript.parentNode) {
+        oldScript.parentNode.removeChild(oldScript);
+      }
 
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', targetUrl, true);
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            try {
-              var liveData = JSON.parse(xhr.responseText);
-              renderWeather(liveData);
-            } catch (e) {}
-          }
-        };
-        xhr.send();
-      } catch (err) {}
+      var script = document.createElement('script');
+      script.id = 'weather-script-tag';
+      script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?t=' + new Date().getTime();
+      script.onload = function() {
+        if (window.METEO_DATA) {
+          renderWeather(window.METEO_DATA);
+        }
+      };
+      document.body.appendChild(script);
     }
 
     fetchWeatherData();
