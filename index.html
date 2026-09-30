@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Meteo Bari</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    * {
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #0b0c10;
+      color: #fdfbf7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #app {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      height: 100%;
+      width: 100%;
+      padding: 24px 36px 20px 36px;
+    }
+    .top-meta {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      color: #4b5563;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+    #last-update {
+      text-transform: lowercase;
+      letter-spacing: 0.5px;
+      font-weight: 400;
+      color: #4b5563;
+      font-size: 13px;
+    }
+    .clock-container {
+      text-align: center;
+      margin-top: -10px;
+    }
+    .time-wrapper {
+      display: inline-block;
+      font-size: 180px;
+      line-height: 0.92;
+      font-weight: 300;
+      letter-spacing: -6px;
+      position: relative;
+    }
+    .seconds-inline {
+      position: absolute;
+      bottom: 22px;
+      right: -58px;
+      font-size: 42px;
+      font-weight: 300;
+      color: rgba(253, 251, 247, 0.45);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .date-row {
+      margin-top: 14px;
+      font-size: 26px;
+      font-weight: 300;
+      color: #fdfbf7;
+      letter-spacing: -0.3px;
+    }
+    .moon-dot {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      background-color: #fdfbf7;
+      border-radius: 50%;
+      margin: 0 8px 3px 12px;
+      vertical-align: middle;
+    }
+    .moon-name {
+      color: #94a3b8;
+      font-size: 24px;
+      font-weight: 300;
+    }
+    .main-weather {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      margin-top: -10px;
+    }
+    .main-icon-wrap {
+      width: 120px;
+      height: 120px;
+      margin-right: 20px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+    .main-temp {
+      font-size: 128px;
+      font-weight: 300;
+      line-height: 0.95;
+      margin-right: 36px;
+      letter-spacing: -4px;
+    }
+    .main-details {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      line-height: 1.45;
+    }
+    .condition-text {
+      font-size: 34px;
+      font-weight: 400;
+      margin-bottom: 2px;
+      letter-spacing: -0.5px;
+    }
+    .minmax-line {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .max-t { color: #f97316; margin-right: 14px; }
+    .min-t { color: #38bdf8; }
+    .metrics-line {
+      font-size: 20px;
+      color: #cbd5e1;
+      font-weight: 300;
+    }
+    .wind-line, .sun-line {
+      font-size: 19px;
+      color: #94a3b8;
+      font-weight: 300;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+    .wind-arrow-svg {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      margin-right: 6px;
+      -webkit-transform-origin: center;
+      transform-origin: center;
+    }
+    .sun-icon-svg {
+      display: inline-block;
+      width: 19px;
+      height: 19px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .alert-container {
+      text-align: center;
+      min-height: 38px;
+    }
+    .alert-pill {
+      display: inline-block;
+      background: rgba(180, 83, 9, 0.22);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: #fbbf24;
+      padding: 7px 26px;
+      border-radius: 999px;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.2px;
+    }
+    .forecast-grid {
+      display: -webkit-flex;
+      display: flex;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 18px;
+      padding-bottom: 6px;
+    }
+    .col-item {
+      -webkit-flex: 1;
+      flex: 1;
+      text-align: center;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .col-item:last-child {
+      border-right: none;
+    }
+    .col-title {
+      font-size: 18px;
+      color: #94a3b8;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+    .col-icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 12px auto;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+    .col-temps {
+      font-size: 26px;
+      font-weight: 400;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+    .col-pop {
+      font-size: 17px;
+      color: #38bdf8;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="top-meta">
+      <div>BARI</div>
+      <div id="last-update">aggiornato alle --:--</div>
+    </div>
+    
+    <div class="clock-container">
+      <div class="time-wrapper">
+        <span id="clock-hm">--:--</span>
+        <span id="clock-s" class="seconds-inline">--</span>
+      </div>
+      <div class="date-row">
+        <span id="date-text">---</span>
+        <span class="moon-dot"></span>
+        <span id="moon-phase" class="moon-name">luna</span>
+      </div>
+    </div>
+    
+    <div class="main-weather">
+      <div class="main-icon-wrap" id="main-weather-icon"></div>
+      <div class="main-temp" id="current-temp">--°</div>
+      <div class="main-details">
+        <div class="condition-text" id="weather-desc">Caricamento...</div>
+        <div class="minmax-line">
+          <span class="max-t" id="today-max">max --°</span>
+          <span class="min-t" id="today-min">min --°</span>
+        </div>
+        <div class="metrics-line" id="metrics-line">Percepita --° · Umidità --%</div>
+        <div class="wind-line" id="wind-line">
+          <span id="wind-icon-wrap"></span>
+          <span id="wind-text">Vento -- km/h</span>
+        </div>
+        <div class="sun-line" id="sun-line">
+          <span id="sunrise-icon"></span><span id="sr-text">--:--</span>
+          &nbsp;&nbsp;·&nbsp;&nbsp;
+          <span id="sunset-icon"></span><span id="ss-text">--:--</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alert-container">
+      <div id="wind-alert" class="alert-pill" style="display: none;"></div>
+    </div>
+    
+    <div class="forecast-grid" id="forecast-grid"></div>
+  </div>
+
+  <script>
+    function getTempColor(t) {
+      if (t < 0) return '#a5f3fc';
+      if (t <= 10) return '#7dd3fc';
+      if (t <= 25) return '#fdfbf7';
+      if (t <= 30) return '#fdba74';
+      if (t <= 35) return '#fb923c';
+      return '#fdfbf7';
+    }
+
+    function getWindName(deg) {
+      var names = ['Tramontana','Grecale','Levante','Scirocco','Ostro','Libeccio','Ponente','Maestrale'];
+      var idx = Math.round(deg / 45) % 8;
+      return names[idx];
+    }
+
+    function getWindDir(deg) {
+      var dirs = ['N','NE','E','SE','S','SW','W','NW'];
+      var idx = Math.round(deg / 45) % 8;
+      return dirs[idx];
+    }
+
+    function getMoonPhaseName(date) {
+      var y = date.getFullYear();
+      var m = date.getMonth() + 1;
+      var d = date.getDate();
+      var c = 0, e = 0, jd = 0, b = 0;
+      if (m < 3) { y--; m += 12; }
+      ++m;
+      c = 365.25 * y;
+      e = 30.6 * m;
+      jd = c + e + d - 694039.09;
+      jd /= 29.5305882;
+      b = parseInt(jd);
+      jd -= b;
+      var phase = Math.round(jd * 8);
+      if (phase >= 8) phase = 0;
+      var names = [
+        'luna nuova', 'crescente', 'primo quarto', 'gibbosa crescente',
+        'luna piena', 'gibbosa calante', 'ultimo quarto', 'calante'
+      ];
+      return names[phase];
+    }
+
+    function getWeatherInfo(code, isDay) {
+      if (isDay === undefined) isDay = 1;
+      switch (code) {
+        case 0:
+          return { desc: isDay ? 'Sereno' : 'Cielo sereno', type: isDay ? 'sun' : 'moon' };
+        case 1:
+          return { desc: 'Poco nuvoloso', type: isDay ? 'cloud-sun' : 'moon-cloud' };
+        case 2:
+          return { desc: 'Parzialmente nuvoloso', type: isDay ? 'cloud-sun' : 'cloud-moon' };
+        case 3:
+          return { desc: 'Coperto', type: 'cloud' };
+        case 45: case 48:
+          return { desc: 'Nebbia', type: 'cloud' };
+        case 51: case 53: case 55:
+        case 61: case 63: case 65:
+          return { desc: 'Pioggia', type: 'rain' };
+        case 71: case 73: case 75:
+          return { desc: 'Neve', type: 'rain' };
+        case 80: case 81: case 82:
+          return { desc: 'Rovesci di pioggia', type: 'rain' };
+        case 95: case 96: case 99:
+          return { desc: 'Temporale', type: 'rain' };
+        default:
+          return { desc: 'Parzialmente nuvoloso', type: 'cloud-sun' };
+      }
+    }
+
+    function renderIcon(type, size) {
+      var s = size || 40;
+      if (type === 'sun') {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<circle cx="32" cy="32" r="14" fill="#fbbf24"/>' +
+          '<g stroke="#fbbf24" stroke-width="4.5" stroke-linecap="round">' +
+          '<line x1="32" y1="5" x2="32" y2="11"/>' +
+          '<line x1="32" y1="53" x2="32" y2="59"/>' +
+          '<line x1="5" y1="32" x2="11" y2="32"/>' +
+          '<line x1="53" y1="32" x2="59" y2="32"/>' +
+          '<line x1="13" y1="13" x2="17.5" y2="17.5"/>' +
+          '<line x1="46.5" y1="46.5" x2="51" y2="51"/>' +
+          '<line x1="13" y1="51" x2="17.5" y2="46.5"/>' +
+          '<line x1="46.5" y1="17.5" x2="51" y2="13"/>' +
+          '</g></svg>';
+      } else if (type === 'moon') {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<path d="M44 34.5 C43 45.5 33.5 54 22 53 C18.5 52.7 15.3 51.5 12.5 49.7 C19.5 51.5 28.5 48.5 33.5 42 C38.5 35.5 38 26.5 32.5 20.5 C38.5 22.5 43.5 27.5 44 34.5 Z" fill="#f8fafc"/>' +
+          '</svg>';
+      } else if (type === 'cloud') {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<path d="M51 45 H16 c-6 0-11-4.8-11-10.8 0-5.3 3.8-9.7 8.9-10.6 C15.5 14.8 23 8 32 8 c8.2 0 15.2 5.7 17 13.5 C54 22.3 58 26.8 58 32.2 58 39.3 54.9 45 51 45 Z" fill="#cbd5e1"/>' +
+          '</svg>';
+      } else if (type === 'rain') {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<path d="M51 38 H16 c-6 0-11-4.8-11-10.8 0-5.3 3.8-9.7 8.9-10.6 C15.5 8 23 2 32 2 c8.2 0 15.2 5.7 17 13.5 C54 16 58 20 58 26 58 33 54.9 38 51 38 Z" fill="#94a3b8"/>' +
+          '<line x1="20" y1="46" x2="16" y2="56" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<line x1="32" y1="46" x2="28" y2="56" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<line x1="44" y1="46" x2="40" y2="56" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>' +
+          '</svg>';
+      } else {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<g>' +
+          '<circle cx="21" cy="21" r="10.5" fill="#fbbf24"/>' +
+          '<line x1="21" y1="4" x2="21" y2="8" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<line x1="9" y1="9" x2="12" y2="12" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<line x1="4" y1="21" x2="8" y2="21" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<line x1="9" y1="33" x2="12" y2="30" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
+          '</g>' +
+          '<path d="M54 50 H18 c-6.5 0-11.8-5-11.8-11.2 0-5.5 3.9-10.1 9.3-11 C17 19.5 24.5 13 33.5 13 c8.5 0 15.6 5.8 17.5 13.8 C55.5 27.5 59 32 59 37.5 59 44.4 56.8 50 54 50 Z" fill="#e2e8f0"/>' +
+          '</svg>';
+      }
+    }
+
+    function renderSunriseIcon() {
+      return '<svg class="sun-icon-svg" viewBox="0 0 24 24" fill="none">' +
+        '<line x1="3" y1="19" x2="21" y2="19" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<path d="M7 16 A5 5 0 0 1 17 16" fill="#fbbf24"/>' +
+        '<polyline points="9 8 12 5 15 8" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="12" y1="5" x2="12" y2="13" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>' +
+        '</svg>';
+    }
+
+    function renderSunsetIcon() {
+      return '<svg class="sun-icon-svg" viewBox="0 0 24 24" fill="none">' +
+        '<line x1="3" y1="19" x2="21" y2="19" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<path d="M7 16 A5 5 0 0 1 17 16" fill="#fbbf24"/>' +
+        '<polyline points="9 10 12 13 15 10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="12" y1="5" x2="12" y2="13" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>' +
+        '</svg>';
+    }
+
+    function updateClock() {
+      var now = new Date();
+      var h = now.getHours();
+      var m = now.getMinutes();
+      var s = now.getSeconds();
+      var hStr = (h < 10 ? '0' : '') + h;
+      var mStr = (m < 10 ? '0' : '') + m;
+      var sStr = (s < 10 ? '0' : '') + s;
+
+      document.getElementById('clock-hm').innerHTML = hStr + ':' + mStr;
+      document.getElementById('clock-s').innerHTML = sStr;
+
+      var days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+      var months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+      var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+      document.getElementById('date-text').innerHTML = dateStr;
+      document.getElementById('moon-phase').innerHTML = getMoonPhaseName(now);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function fetchWeatherData() {
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            renderWeather(data);
+          } catch (e) {}
+        }
+      };
+      xhr.send();
+    }
+
+    function renderWeather(data) {
+      var cur = data.current;
+      var curTemp = Math.round(cur.temperature_2m);
+      var curColor = getTempColor(curTemp);
+
+      var tempEl = document.getElementById('current-temp');
+      tempEl.innerHTML = curTemp + '°';
+      tempEl.style.color = curColor;
+
+      var wInfo = getWeatherInfo(cur.weather_code, cur.is_day);
+      document.getElementById('weather-desc').innerHTML = wInfo.desc;
+      document.getElementById('main-weather-icon').innerHTML = renderIcon(wInfo.type, 115);
+
+      var dMax = Math.round(data.daily.temperature_2m_max[0]);
+      var dMin = Math.round(data.daily.temperature_2m_min[0]);
+      document.getElementById('today-max').innerHTML = 'max ' + dMax + '°';
+      document.getElementById('today-min').innerHTML = 'min ' + dMin + '°';
+
+      var appTemp = Math.round(cur.apparent_temperature);
+      var hum = cur.relative_humidity_2m;
+      document.getElementById('metrics-line').innerHTML = 'Percepita ' + appTemp + '° · Umidità ' + hum + '%';
+
+      var wSpeed = Math.round(cur.wind_speed_10m);
+      var wDir = getWindDir(cur.wind_direction_10m);
+      var wName = getWindName(cur.wind_direction_10m);
+      var wGusts = Math.round(cur.wind_gusts_10m);
+
+      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + cur.wind_direction_10m + 'deg); transform: rotate(' + cur.wind_direction_10m + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
+      document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
+      document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
+
+      var sr = data.daily.sunrise[0].split('T')[1];
+      var ss = data.daily.sunset[0].split('T')[1];
+      document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
+      document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
+      document.getElementById('sr-text').innerHTML = sr;
+      document.getElementById('ss-text').innerHTML = ss;
+
+      var alertBox = document.getElementById('wind-alert');
+      if (wGusts >= 25) {
+        alertBox.innerHTML = 'Raffiche di vento fino a ' + wGusts + ' km/h';
+        alertBox.style.display = 'inline-block';
+      } else {
+        alertBox.style.display = 'none';
+      }
+
+      var nowH = new Date().getHours();
+      var colsHtml = '';
+
+      var hSteps = [nowH + 2, nowH + 5, nowH + 8, nowH + 11];
+      for (var i = 0; i < hSteps.length; i++) {
+        var hIdx = hSteps[i];
+        if (hIdx < data.hourly.time.length) {
+          var hHour = parseInt(data.hourly.time[hIdx].split('T')[1].split(':')[0]);
+          var hTemp = Math.round(data.hourly.temperature_2m[hIdx]);
+          var hPop = data.hourly.precipitation_probability[hIdx] || 0;
+          var hCode = data.hourly.weather_code[hIdx];
+          var hIsDay = (hHour >= 6 && hHour < 19) ? 1 : 0;
+          var hInfo = getWeatherInfo(hCode, hIsDay);
+          var hColor = getTempColor(hTemp);
+
+          colsHtml += '<div class="col-item">' +
+            '<div class="col-title">Ore ' + hHour + '</div>' +
+            '<div class="col-icon">' + renderIcon(hInfo.type, 38) + '</div>' +
+            '<div class="col-temps" style="color:' + hColor + ';">' + hTemp + '°</div>' +
+            '<div class="col-pop">' + hPop + '%</div>' +
+            '</div>';
+        }
+      }
+
+      var dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+      for (var d = 1; d <= 4; d++) {
+        if (d < data.daily.time.length) {
+          var dayDate = new Date(data.daily.time[d]);
+          var dayTitle = dayNames[dayDate.getDay()] + ' ' + dayDate.getDate();
+          var maxT = Math.round(data.daily.temperature_2m_max[d]);
+          var minT = Math.round(data.daily.temperature_2m_min[d]);
+          var dPop = data.daily.precipitation_probability_max[d] || 0;
+          var dCode = data.daily.weather_code[d];
+          var dInfo = getWeatherInfo(dCode, 1);
+
+          colsHtml += '<div class="col-item">' +
+            '<div class="col-title">' + dayTitle + '</div>' +
+            '<div class="col-icon">' + renderIcon(dInfo.type, 38) + '</div>' +
+            '<div class="col-temps"><span style="color:#f97316;">' + maxT + '°</span> <span style="color:#38bdf8;">' + minT + '°</span></div>' +
+            '<div class="col-pop">' + dPop + '%</div>' +
+            '</div>';
+        }
+      }
+
+      document.getElementById('forecast-grid').innerHTML = colsHtml;
+
+      var upd = new Date();
+      var uH = upd.getHours();
+      var uM = upd.getMinutes();
+      document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
+    }
+
+    fetchWeatherData();
+    setInterval(fetchWeatherData, 15 * 60 * 1000);
+  </script>
+</body>
+</html>
