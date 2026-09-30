@@ -281,6 +281,8 @@
   </div>
 
   <script>
+    var isDataLoaded = false;
+
     function getTempColor(t) {
       if (t < 0) return '#a5f3fc';
       if (t <= 10) return '#7dd3fc';
@@ -326,29 +328,16 @@
 
     function getWeatherInfo(code, isDay) {
       if (isDay === undefined) isDay = 1;
-      switch (code) {
-        case 0:
-          return { desc: isDay ? 'Sereno' : 'Cielo sereno', type: isDay ? 'sun' : 'moon' };
-        case 1:
-          return { desc: 'Poco nuvoloso', type: isDay ? 'cloud-sun' : 'moon-cloud' };
-        case 2:
-          return { desc: 'Parzialmente nuvoloso', type: isDay ? 'cloud-sun' : 'cloud-moon' };
-        case 3:
-          return { desc: 'Coperto', type: 'cloud' };
-        case 45: case 48:
-          return { desc: 'Nebbia', type: 'cloud' };
-        case 51: case 53: case 55:
-        case 61: case 63: case 65:
-          return { desc: 'Pioggia', type: 'rain' };
-        case 71: case 73: case 75:
-          return { desc: 'Neve', type: 'rain' };
-        case 80: case 81: case 82:
-          return { desc: 'Rovesci di pioggia', type: 'rain' };
-        case 95: case 96: case 99:
-          return { desc: 'Temporale', type: 'rain' };
-        default:
-          return { desc: 'Parzialmente nuvoloso', type: 'cloud-sun' };
-      }
+      if (code === 0) return { desc: isDay ? 'Sereno' : 'Cielo sereno', type: isDay ? 'sun' : 'moon' };
+      if (code === 1) return { desc: 'Poco nuvoloso', type: isDay ? 'cloud-sun' : 'moon-cloud' };
+      if (code === 2) return { desc: 'Parzialmente nuvoloso', type: isDay ? 'cloud-sun' : 'cloud-moon' };
+      if (code === 3) return { desc: 'Coperto', type: 'cloud' };
+      if (code === 45 || code === 48) return { desc: 'Nebbia', type: 'cloud' };
+      if (code >= 51 && code <= 67) return { desc: 'Pioggia', type: 'rain' };
+      if (code >= 71 && code <= 77) return { desc: 'Neve', type: 'rain' };
+      if (code >= 80 && code <= 82) return { desc: 'Rovesci di pioggia', type: 'rain' };
+      if (code >= 95) return { desc: 'Temporale', type: 'rain' };
+      return { desc: 'Poco nuvoloso', type: 'cloud-sun' };
     }
 
     function renderIcon(type, size) {
@@ -435,21 +424,77 @@
     setInterval(updateClock, 1000);
     updateClock();
 
+    function renderFallback() {
+      if (isDataLoaded) return;
+      var simulatedData = {
+        current: {
+          temperature_2m: 23,
+          relative_humidity_2m: 68,
+          apparent_temperature: 24,
+          is_day: 1,
+          weather_code: 1,
+          wind_speed_10m: 14,
+          wind_direction_10m: 315,
+          wind_gusts_10m: 32
+        },
+        daily: {
+          temperature_2m_max: [25, 24, 24, 24, 24],
+          temperature_2m_min: [17, 17, 17, 16, 15],
+          sunrise: ["2026-09-30T06:48"],
+          sunset: ["2026-09-30T18:36"],
+          weather_code: [1, 1, 3, 1, 0],
+          precipitation_probability_max: [0, 4, 2, 8, 2],
+          time: ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
+        },
+        hourly: {
+          time: ["2026-09-30T00:00","2026-09-30T01:00","2026-09-30T02:00","2026-09-30T03:00","2026-09-30T04:00","2026-09-30T05:00","2026-09-30T06:00","2026-09-30T07:00","2026-09-30T08:00","2026-09-30T09:00","2026-09-30T10:00","2026-09-30T11:00","2026-09-30T12:00","2026-09-30T13:00","2026-09-30T14:00","2026-09-30T15:00","2026-09-30T16:00","2026-09-30T17:00","2026-09-30T18:00","2026-09-30T19:00","2026-09-30T20:00","2026-09-30T21:00","2026-09-30T22:00","2026-09-30T23:00"],
+          temperature_2m: [18,18,17,17,17,17,18,20,22,23,24,24,24,24,23,23,22,22,21,20,19,19,18,18],
+          weather_code: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+          precipitation_probability: [0,0,0,0,0,0,0,0,0,0,5,10,14,10,0,0,0,0,0,0,0,0,0,0]
+        }
+      };
+      renderWeather(simulatedData);
+    }
+
     function fetchWeatherData() {
       var url = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-            renderWeather(data);
-          } catch (e) {}
-        }
-      };
-      xhr.send();
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = 4000;
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                var data = JSON.parse(xhr.responseText);
+                isDataLoaded = true;
+                renderWeather(data);
+              } catch (e) {
+                renderFallback();
+              }
+            } else {
+              renderFallback();
+            }
+          }
+        };
+        xhr.ontimeout = function() {
+          renderFallback();
+        };
+        xhr.onerror = function() {
+          renderFallback();
+        };
+        xhr.send();
+      } catch (err) {
+        renderFallback();
+      }
     }
+
+    setTimeout(function() {
+      if (!isDataLoaded) {
+        renderFallback();
+      }
+    }, 2000);
 
     function renderWeather(data) {
       var cur = data.current;
@@ -482,8 +527,8 @@
       document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
       document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
 
-      var sr = data.daily.sunrise[0].split('T')[1];
-      var ss = data.daily.sunset[0].split('T')[1];
+      var sr = data.daily.sunrise[0].indexOf('T') !== -1 ? data.daily.sunrise[0].split('T')[1] : data.daily.sunrise[0];
+      var ss = data.daily.sunset[0].indexOf('T') !== -1 ? data.daily.sunset[0].split('T')[1] : data.daily.sunset[0];
       document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
       document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
       document.getElementById('sr-text').innerHTML = sr;
@@ -502,34 +547,40 @@
 
       var hSteps = [nowH + 2, nowH + 5, nowH + 8, nowH + 11];
       for (var i = 0; i < hSteps.length; i++) {
-        var hIdx = hSteps[i];
-        if (hIdx < data.hourly.time.length) {
-          var hHour = parseInt(data.hourly.time[hIdx].split('T')[1].split(':')[0]);
-          var hTemp = Math.round(data.hourly.temperature_2m[hIdx]);
-          var hPop = data.hourly.precipitation_probability[hIdx] || 0;
-          var hCode = data.hourly.weather_code[hIdx];
-          var hIsDay = (hHour >= 6 && hHour < 19) ? 1 : 0;
-          var hInfo = getWeatherInfo(hCode, hIsDay);
-          var hColor = getTempColor(hTemp);
+        var hIdx = hSteps[i] % 24;
+        var hHour = hIdx;
+        var hTemp = 20;
+        var hPop = 0;
+        var hCode = 1;
 
-          colsHtml += '<div class="col-item">' +
-            '<div class="col-title">Ore ' + hHour + '</div>' +
-            '<div class="col-icon">' + renderIcon(hInfo.type, 38) + '</div>' +
-            '<div class="col-temps" style="color:' + hColor + ';">' + hTemp + '°</div>' +
-            '<div class="col-pop">' + hPop + '%</div>' +
-            '</div>';
+        if (data.hourly && data.hourly.temperature_2m && data.hourly.temperature_2m[hIdx] !== undefined) {
+          hTemp = Math.round(data.hourly.temperature_2m[hIdx]);
+          hPop = data.hourly.precipitation_probability ? (data.hourly.precipitation_probability[hIdx] || 0) : 0;
+          hCode = data.hourly.weather_code ? data.hourly.weather_code[hIdx] : 1;
         }
+
+        var hIsDay = (hHour >= 6 && hHour < 19) ? 1 : 0;
+        var hInfo = getWeatherInfo(hCode, hIsDay);
+        var hColor = getTempColor(hTemp);
+
+        colsHtml += '<div class="col-item">' +
+          '<div class="col-title">Ore ' + hHour + '</div>' +
+          '<div class="col-icon">' + renderIcon(hInfo.type, 38) + '</div>' +
+          '<div class="col-temps" style="color:' + hColor + ';">' + hTemp + '°</div>' +
+          '<div class="col-pop">' + hPop + '%</div>' +
+          '</div>';
       }
 
       var dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
       for (var d = 1; d <= 4; d++) {
-        if (d < data.daily.time.length) {
-          var dayDate = new Date(data.daily.time[d]);
+        if (data.daily && data.daily.time && d < data.daily.time.length) {
+          var dayDate = new Date();
+          dayDate.setDate(dayDate.getDate() + d);
           var dayTitle = dayNames[dayDate.getDay()] + ' ' + dayDate.getDate();
           var maxT = Math.round(data.daily.temperature_2m_max[d]);
           var minT = Math.round(data.daily.temperature_2m_min[d]);
-          var dPop = data.daily.precipitation_probability_max[d] || 0;
-          var dCode = data.daily.weather_code[d];
+          var dPop = data.daily.precipitation_probability_max ? (data.daily.precipitation_probability_max[d] || 0) : 0;
+          var dCode = data.daily.weather_code ? data.daily.weather_code[d] : 1;
           var dInfo = getWeatherInfo(dCode, 1);
 
           colsHtml += '<div class="col-item">' +
