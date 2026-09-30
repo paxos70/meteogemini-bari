@@ -1,0 +1,21 @@
+name: Update Weather Data
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Fetch Open-Meteo
+        run: |
+          curl -s "https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome" -o weather.json
+      - name: Commit and push
+        run: |
+          git config --global user.name "WeatherBot"
+          git config --global user.email "bot@github.com"
+          git add weather.json
+          git commit -m "Aggiornamento meteo automatico" || exit 0
+          git push
