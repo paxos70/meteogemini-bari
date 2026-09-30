@@ -306,7 +306,7 @@
       return dirs[idx];
     }
 
- f function getMoonPhaseName(date) {
+    function getMoonPhaseName(date) {
       var y = date.getFullYear();
       var m = date.getMonth() + 1;
       var d = date.getDate();
@@ -537,7 +537,6 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
-    // Dati immediati di avvio (nessun "Caricamento...")
     var bootData = {
       current: {
         temperature_2m: 18,
@@ -560,7 +559,6 @@
     };
     renderWeather(bootData);
 
-    // Funzione di scaricamento sicura
     function fetchWeatherData() {
       var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?nocache=' + new Date().getTime();
 
@@ -579,7 +577,6 @@
       } catch (err) {}
     }
 
-    // Carica subito e poi ogni 5 minuti
     setTimeout(fetchWeatherData, 500);
     setInterval(fetchWeatherData, 5 * 60 * 1000);
   </script>
