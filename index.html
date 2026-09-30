@@ -306,26 +306,26 @@
       return dirs[idx];
     }
 
-    function getMoonPhaseName(date) {
+ f function getMoonPhaseName(date) {
       var y = date.getFullYear();
       var m = date.getMonth() + 1;
       var d = date.getDate();
-      var c = 0, e = 0, jd = 0, b = 0;
       if (m < 3) { y--; m += 12; }
       ++m;
-      c = 365.25 * y;
-      e = 30.6 * m;
-      jd = c + e + d - 694039.09;
+      var c = 365.25 * y;
+      var e = 30.6 * m;
+      var jd = c + e + d - 694039.09;
       jd /= 29.5305882;
-      b = parseInt(jd);
-      jd -= b;
-      var phase = Math.round(jd * 8);
-      if (phase >= 8) phase = 0;
-      var names = [
-        'luna nuova', 'crescente', 'primo quarto', 'gibbosa crescente',
-        'luna piena', 'gibbosa calante', 'ultimo quarto', 'calante'
-      ];
-      return names[phase];
+      var frac = jd - Math.floor(jd);
+
+      if (frac < 0.03 || frac > 0.97) return 'luna nuova';
+      if (frac < 0.22) return 'crescente';
+      if (frac <= 0.28) return 'primo quarto';
+      if (frac < 0.47) return 'gibbosa crescente';
+      if (frac <= 0.53) return 'luna piena';
+      if (frac < 0.72) return 'gibbosa calante';
+      if (frac <= 0.78) return 'ultimo quarto';
+      return 'calante';
     }
 
     function getWeatherInfo(code, isDay) {
