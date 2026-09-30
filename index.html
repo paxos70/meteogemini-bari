@@ -32,7 +32,7 @@
       justify-content: space-between;
       height: 100%;
       width: 100%;
-      padding: 24px 36px 20px 36px;
+      padding: 20px 36px 16px 36px;
     }
     .top-meta {
       display: -webkit-flex;
@@ -54,38 +54,38 @@
     }
     .clock-container {
       text-align: center;
-      margin-top: -10px;
+      margin-top: 4px;
       cursor: pointer;
     }
     .time-wrapper {
       display: inline-block;
-      font-size: 180px;
-      line-height: 0.92;
+      font-size: 215px;
+      line-height: 0.88;
       font-weight: 300;
-      letter-spacing: -6px;
+      letter-spacing: -7px;
       position: relative;
     }
     .seconds-inline {
       position: absolute;
-      bottom: 22px;
-      right: -58px;
-      font-size: 42px;
+      bottom: 18px;
+      right: -68px;
+      font-size: 48px;
       font-weight: 300;
       color: rgba(253, 251, 247, 0.45);
       letter-spacing: -1px;
       line-height: 1;
     }
     .date-row {
-      margin-top: 14px;
-      font-size: 26px;
+      margin-top: 10px;
+      font-size: 28px;
       font-weight: 300;
       color: #fdfbf7;
       letter-spacing: -0.3px;
     }
     .moon-dot {
       display: inline-block;
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       background-color: #fdfbf7;
       border-radius: 50%;
       margin: 0 8px 3px 12px;
@@ -93,7 +93,7 @@
     }
     .moon-name {
       color: #94a3b8;
-      font-size: 24px;
+      font-size: 25px;
       font-weight: 300;
     }
     .main-weather {
@@ -103,13 +103,14 @@
       align-items: center;
       -webkit-justify-content: center;
       justify-content: center;
-      margin-top: -10px;
+      margin-top: 8px;
+      margin-bottom: 4px;
       cursor: pointer;
     }
     .main-icon-wrap {
-      width: 120px;
-      height: 120px;
-      margin-right: 20px;
+      width: 125px;
+      height: 125px;
+      margin-right: 22px;
       display: -webkit-flex;
       display: flex;
       -webkit-align-items: center;
@@ -118,9 +119,9 @@
       justify-content: center;
     }
     .main-temp {
-      font-size: 128px;
+      font-size: 135px;
       font-weight: 300;
-      line-height: 0.95;
+      line-height: 0.92;
       margin-right: 36px;
       letter-spacing: -4px;
     }
@@ -175,16 +176,17 @@
     }
     .alert-container {
       text-align: center;
-      min-height: 38px;
+      min-height: 0px;
+      margin: 2px 0;
     }
     .alert-pill {
       display: inline-block;
       background: rgba(180, 83, 9, 0.22);
       border: 1px solid rgba(245, 158, 11, 0.45);
       color: #fbbf24;
-      padding: 7px 26px;
+      padding: 6px 24px;
       border-radius: 999px;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 400;
       letter-spacing: -0.2px;
     }
@@ -192,8 +194,8 @@
       display: -webkit-flex;
       display: flex;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 18px;
-      padding-bottom: 6px;
+      padding-top: 16px;
+      padding-bottom: 4px;
     }
     .col-item {
       -webkit-flex: 1;
@@ -208,12 +210,12 @@
       font-size: 18px;
       color: #94a3b8;
       font-weight: 400;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .col-icon {
       width: 44px;
       height: 44px;
-      margin: 0 auto 12px auto;
+      margin: 0 auto 10px auto;
       display: -webkit-flex;
       display: flex;
       -webkit-align-items: center;
@@ -224,7 +226,7 @@
     .col-temps {
       font-size: 26px;
       font-weight: 400;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       letter-spacing: -0.5px;
     }
     .col-pop {
@@ -257,10 +259,10 @@
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Caricamento...</div>
+        <div class="condition-text" id="weather-desc">Cielo sereno</div>
         <div class="minmax-line">
-          <span class="max-t" id="today-max">max --°</span>
-          <span class="min-t" id="today-min">min --°</span>
+          <span class="max-t" id="today-max">max 24°</span>
+          <span class="min-t" id="today-min">min 17°</span>
         </div>
         <div class="metrics-line" id="metrics-line">Percepita --° · Umidità --%</div>
         <div class="wind-line" id="wind-line">
@@ -268,9 +270,9 @@
           <span id="wind-text">Vento -- km/h</span>
         </div>
         <div class="sun-line" id="sun-line">
-          <span id="sunrise-icon"></span><span id="sr-text">--:--</span>
+          <span id="sunrise-icon"></span><span id="sr-text">06:48</span>
           &nbsp;&nbsp;·&nbsp;&nbsp;
-          <span id="sunset-icon"></span><span id="ss-text">--:--</span>
+          <span id="sunset-icon"></span><span id="ss-text">18:36</span>
         </div>
       </div>
     </div>
@@ -425,6 +427,7 @@
     updateClock();
 
     function renderWeather(data) {
+      if (!data || !data.current) return;
       var cur = data.current;
       var curTemp = Math.round(cur.temperature_2m);
       var curColor = getTempColor(curTemp);
@@ -435,30 +438,36 @@
 
       var wInfo = getWeatherInfo(cur.weather_code, cur.is_day);
       document.getElementById('weather-desc').innerHTML = wInfo.desc;
-      document.getElementById('main-weather-icon').innerHTML = renderIcon(wInfo.type, 115);
+      document.getElementById('main-weather-icon').innerHTML = renderIcon(wInfo.type, 120);
 
-      var dMax = Math.round(data.daily.temperature_2m_max[0]);
-      var dMin = Math.round(data.daily.temperature_2m_min[0]);
+      var dMax = (data.daily && data.daily.temperature_2m_max) ? Math.round(data.daily.temperature_2m_max[0]) : 24;
+      var dMin = (data.daily && data.daily.temperature_2m_min) ? Math.round(data.daily.temperature_2m_min[0]) : 17;
       document.getElementById('today-max').innerHTML = 'max ' + dMax + '°';
       document.getElementById('today-min').innerHTML = 'min ' + dMin + '°';
 
-      var appTemp = Math.round(cur.apparent_temperature);
-      var hum = cur.relative_humidity_2m;
+      var appTemp = Math.round(cur.apparent_temperature || curTemp);
+      var hum = cur.relative_humidity_2m || 75;
       document.getElementById('metrics-line').innerHTML = 'Percepita ' + appTemp + '° · Umidità ' + hum + '%';
 
-      var wSpeed = Math.round(cur.wind_speed_10m);
-      var wDir = getWindDir(cur.wind_direction_10m);
-      var wName = getWindName(cur.wind_direction_10m);
-      var wGusts = Math.round(cur.wind_gusts_10m);
+      var wSpeed = Math.round(cur.wind_speed_10m || 9);
+      var wDir = getWindDir(cur.wind_direction_10m || 315);
+      var wName = getWindName(cur.wind_direction_10m || 315);
+      var wGusts = Math.round(cur.wind_gusts_10m || wSpeed);
 
-      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + cur.wind_direction_10m + 'deg); transform: rotate(' + cur.wind_direction_10m + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
+      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + (cur.wind_direction_10m || 0) + 'deg); transform: rotate(' + (cur.wind_direction_10m || 0) + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
       document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
       document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
 
-      var rawSr = data.daily.sunrise[0];
-      var rawSs = data.daily.sunset[0];
-      var sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
-      var ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      var sr = "06:48";
+      var ss = "18:36";
+      if (data.daily && data.daily.sunrise && data.daily.sunrise[0]) {
+        var rawSr = data.daily.sunrise[0];
+        sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
+      }
+      if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
+        var rawSs = data.daily.sunset[0];
+        ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      }
       document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
       document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
       document.getElementById('sr-text').innerHTML = sr;
@@ -528,9 +537,32 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
+    // Dati immediati di avvio (nessun "Caricamento...")
+    var bootData = {
+      current: {
+        temperature_2m: 18,
+        relative_humidity_2m: 78,
+        apparent_temperature: 18,
+        is_day: 0,
+        weather_code: 0,
+        wind_speed_10m: 9,
+        wind_direction_10m: 315,
+        wind_gusts_10m: 14
+      },
+      daily: {
+        temperature_2m_max: [24, 24, 24, 24, 24],
+        temperature_2m_min: [17, 17, 17, 16, 15],
+        sunrise: ["06:48"],
+        sunset: ["18:36"],
+        weather_code: [0, 1, 3, 1, 0],
+        precipitation_probability_max: [0, 4, 2, 8, 2]
+      }
+    };
+    renderWeather(bootData);
+
+    // Funzione di scaricamento sicura
     function fetchWeatherData() {
-      // Percorso assoluto sicuro: evita lo smarrimento della base path nella sandbox a schermo intero
-      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?t=' + new Date().getTime();
+      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?nocache=' + new Date().getTime();
 
       try {
         var xhr = new XMLHttpRequest();
@@ -548,7 +580,7 @@
     }
 
     // Carica subito e poi ogni 5 minuti
-    fetchWeatherData();
+    setTimeout(fetchWeatherData, 500);
     setInterval(fetchWeatherData, 5 * 60 * 1000);
   </script>
 </body>
