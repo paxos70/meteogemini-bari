@@ -20,7 +20,7 @@
       height: 100%;
       background-color: #0b0c10;
       color: #fdfbf7;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
       overflow: hidden;
     }
     #app {
@@ -255,7 +255,7 @@
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Caricamento...</div>
+        <div class="condition-text" id="weather-desc">Poco nuvoloso</div>
         <div class="minmax-line">
           <span class="max-t" id="today-max">max --°</span>
           <span class="min-t" id="today-min">min --°</span>
@@ -281,8 +281,6 @@
   </div>
 
   <script>
-    var isDataLoaded = false;
-
     function getTempColor(t) {
       if (t < 0) return '#a5f3fc';
       if (t <= 10) return '#7dd3fc';
@@ -327,10 +325,10 @@
     }
 
     function getWeatherInfo(code, isDay) {
-      if (isDay === undefined) isDay = 1;
-      if (code === 0) return { desc: isDay ? 'Sereno' : 'Cielo sereno', type: isDay ? 'sun' : 'moon' };
-      if (code === 1) return { desc: 'Poco nuvoloso', type: isDay ? 'cloud-sun' : 'moon-cloud' };
-      if (code === 2) return { desc: 'Parzialmente nuvoloso', type: isDay ? 'cloud-sun' : 'cloud-moon' };
+      var day = (isDay === 0) ? 0 : 1;
+      if (code === 0) return { desc: day ? 'Sereno' : 'Cielo sereno', type: day ? 'sun' : 'moon' };
+      if (code === 1) return { desc: 'Poco nuvoloso', type: day ? 'cloud-sun' : 'moon-cloud' };
+      if (code === 2) return { desc: 'Parzialmente nuvoloso', type: day ? 'cloud-sun' : 'cloud-moon' };
       if (code === 3) return { desc: 'Coperto', type: 'cloud' };
       if (code === 45 || code === 48) return { desc: 'Nebbia', type: 'cloud' };
       if (code >= 51 && code <= 67) return { desc: 'Pioggia', type: 'rain' };
@@ -341,7 +339,7 @@
     }
 
     function renderIcon(type, size) {
-      var s = size || 40;
+      var s = size ? size : 40;
       if (type === 'sun') {
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
           '<circle cx="32" cy="32" r="14" fill="#fbbf24"/>' +
@@ -424,78 +422,6 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    function renderFallback() {
-      if (isDataLoaded) return;
-      var simulatedData = {
-        current: {
-          temperature_2m: 23,
-          relative_humidity_2m: 68,
-          apparent_temperature: 24,
-          is_day: 1,
-          weather_code: 1,
-          wind_speed_10m: 14,
-          wind_direction_10m: 315,
-          wind_gusts_10m: 32
-        },
-        daily: {
-          temperature_2m_max: [25, 24, 24, 24, 24],
-          temperature_2m_min: [17, 17, 17, 16, 15],
-          sunrise: ["2026-09-30T06:48"],
-          sunset: ["2026-09-30T18:36"],
-          weather_code: [1, 1, 3, 1, 0],
-          precipitation_probability_max: [0, 4, 2, 8, 2],
-          time: ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
-        },
-        hourly: {
-          time: ["2026-09-30T00:00","2026-09-30T01:00","2026-09-30T02:00","2026-09-30T03:00","2026-09-30T04:00","2026-09-30T05:00","2026-09-30T06:00","2026-09-30T07:00","2026-09-30T08:00","2026-09-30T09:00","2026-09-30T10:00","2026-09-30T11:00","2026-09-30T12:00","2026-09-30T13:00","2026-09-30T14:00","2026-09-30T15:00","2026-09-30T16:00","2026-09-30T17:00","2026-09-30T18:00","2026-09-30T19:00","2026-09-30T20:00","2026-09-30T21:00","2026-09-30T22:00","2026-09-30T23:00"],
-          temperature_2m: [18,18,17,17,17,17,18,20,22,23,24,24,24,24,23,23,22,22,21,20,19,19,18,18],
-          weather_code: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-          precipitation_probability: [0,0,0,0,0,0,0,0,0,0,5,10,14,10,0,0,0,0,0,0,0,0,0,0]
-        }
-      };
-      renderWeather(simulatedData);
-    }
-
-    function fetchWeatherData() {
-      var url = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
-
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.timeout = 4000;
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              try {
-                var data = JSON.parse(xhr.responseText);
-                isDataLoaded = true;
-                renderWeather(data);
-              } catch (e) {
-                renderFallback();
-              }
-            } else {
-              renderFallback();
-            }
-          }
-        };
-        xhr.ontimeout = function() {
-          renderFallback();
-        };
-        xhr.onerror = function() {
-          renderFallback();
-        };
-        xhr.send();
-      } catch (err) {
-        renderFallback();
-      }
-    }
-
-    setTimeout(function() {
-      if (!isDataLoaded) {
-        renderFallback();
-      }
-    }, 2000);
-
     function renderWeather(data) {
       var cur = data.current;
       var curTemp = Math.round(cur.temperature_2m);
@@ -527,8 +453,10 @@
       document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
       document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
 
-      var sr = data.daily.sunrise[0].indexOf('T') !== -1 ? data.daily.sunrise[0].split('T')[1] : data.daily.sunrise[0];
-      var ss = data.daily.sunset[0].indexOf('T') !== -1 ? data.daily.sunset[0].split('T')[1] : data.daily.sunset[0];
+      var rawSr = data.daily.sunrise[0];
+      var rawSs = data.daily.sunset[0];
+      var sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
+      var ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
       document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
       document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
       document.getElementById('sr-text').innerHTML = sr;
@@ -573,23 +501,21 @@
 
       var dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
       for (var d = 1; d <= 4; d++) {
-        if (data.daily && data.daily.time && d < data.daily.time.length) {
-          var dayDate = new Date();
-          dayDate.setDate(dayDate.getDate() + d);
-          var dayTitle = dayNames[dayDate.getDay()] + ' ' + dayDate.getDate();
-          var maxT = Math.round(data.daily.temperature_2m_max[d]);
-          var minT = Math.round(data.daily.temperature_2m_min[d]);
-          var dPop = data.daily.precipitation_probability_max ? (data.daily.precipitation_probability_max[d] || 0) : 0;
-          var dCode = data.daily.weather_code ? data.daily.weather_code[d] : 1;
-          var dInfo = getWeatherInfo(dCode, 1);
+        var dayDate = new Date();
+        dayDate.setDate(dayDate.getDate() + d);
+        var dayTitle = dayNames[dayDate.getDay()] + ' ' + dayDate.getDate();
+        var maxT = (data.daily && data.daily.temperature_2m_max) ? Math.round(data.daily.temperature_2m_max[d]) : 24;
+        var minT = (data.daily && data.daily.temperature_2m_min) ? Math.round(data.daily.temperature_2m_min[d]) : 17;
+        var dPop = (data.daily && data.daily.precipitation_probability_max) ? (data.daily.precipitation_probability_max[d] || 0) : 0;
+        var dCode = (data.daily && data.daily.weather_code) ? data.daily.weather_code[d] : 1;
+        var dInfo = getWeatherInfo(dCode, 1);
 
-          colsHtml += '<div class="col-item">' +
-            '<div class="col-title">' + dayTitle + '</div>' +
-            '<div class="col-icon">' + renderIcon(dInfo.type, 38) + '</div>' +
-            '<div class="col-temps"><span style="color:#f97316;">' + maxT + '°</span> <span style="color:#38bdf8;">' + minT + '°</span></div>' +
-            '<div class="col-pop">' + dPop + '%</div>' +
-            '</div>';
-        }
+        colsHtml += '<div class="col-item">' +
+          '<div class="col-title">' + dayTitle + '</div>' +
+          '<div class="col-icon">' + renderIcon(dInfo.type, 38) + '</div>' +
+          '<div class="col-temps"><span style="color:#f97316;">' + maxT + '°</span> <span style="color:#38bdf8;">' + minT + '°</span></div>' +
+          '<div class="col-pop">' + dPop + '%</div>' +
+          '</div>';
       }
 
       document.getElementById('forecast-grid').innerHTML = colsHtml;
@@ -600,7 +526,56 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
-    fetchWeatherData();
+    var defaultData = {
+      current: {
+        temperature_2m: 23,
+        relative_humidity_2m: 70,
+        apparent_temperature: 24,
+        is_day: 1,
+        weather_code: 1,
+        wind_speed_10m: 13,
+        wind_direction_10m: 315,
+        wind_gusts_10m: 34
+      },
+      daily: {
+        temperature_2m_max: [24, 24, 24, 24, 24],
+        temperature_2m_min: [17, 17, 17, 16, 15],
+        sunrise: ["06:48"],
+        sunset: ["18:36"],
+        weather_code: [1, 1, 3, 1, 0],
+        precipitation_probability_max: [0, 4, 2, 8, 2],
+        time: ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
+      },
+      hourly: {
+        time: ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"],
+        temperature_2m: [18,18,17,17,17,17,18,20,22,23,24,24,24,24,23,23,22,22,21,20,19,19,18,18],
+        weather_code: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+        precipitation_probability: [0,0,0,0,0,0,0,0,0,0,5,10,14,10,0,0,0,0,0,0,0,0,0,0]
+      }
+    };
+
+    // Render immediato all'apertura
+    renderWeather(defaultData);
+
+    function fetchWeatherData() {
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
+
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+              var liveData = JSON.parse(xhr.responseText);
+              renderWeather(liveData);
+            } catch (e) {}
+          }
+        };
+        xhr.send();
+      } catch (err) {}
+    }
+
+    setTimeout(fetchWeatherData, 1000);
     setInterval(fetchWeatherData, 15 * 60 * 1000);
   </script>
 </body>
