@@ -33,7 +33,6 @@
       height: 100%;
       width: 100%;
       padding: 24px 36px 20px 36px;
-      position: relative;
     }
     .top-meta {
       display: -webkit-flex;
@@ -231,21 +230,13 @@
       color: #38bdf8;
       font-weight: 400;
     }
-    #debug-log {
-      position: absolute;
-      bottom: 4px;
-      left: 36px;
-      font-size: 11px;
-      color: #64748b;
-      font-family: monospace;
-    }
   </style>
 </head>
 <body>
   <div id="app">
     <div class="top-meta">
       <div>BARI</div>
-      <div id="last-update">aggiornamento...</div>
+      <div id="last-update">aggiornato alle --:--</div>
     </div>
     
     <div class="clock-container">
@@ -264,20 +255,20 @@
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Cielo sereno</div>
+        <div class="condition-text" id="weather-desc">Caricamento...</div>
         <div class="minmax-line">
-          <span class="max-t" id="today-max">max 24°</span>
-          <span class="min-t" id="today-min">min 17°</span>
+          <span class="max-t" id="today-max">max --°</span>
+          <span class="min-t" id="today-min">min --°</span>
         </div>
         <div class="metrics-line" id="metrics-line">Percepita --° · Umidità --%</div>
         <div class="wind-line" id="wind-line">
           <span id="wind-icon-wrap"></span>
-          <span id="wind-text">Vento 9 km/h da NO · Maestrale</span>
+          <span id="wind-text">Vento -- km/h</span>
         </div>
         <div class="sun-line" id="sun-line">
-          <span id="sunrise-icon"></span><span id="sr-text">06:48</span>
+          <span id="sunrise-icon"></span><span id="sr-text">--:--</span>
           &nbsp;&nbsp;·&nbsp;&nbsp;
-          <span id="sunset-icon"></span><span id="ss-text">18:36</span>
+          <span id="sunset-icon"></span><span id="ss-text">--:--</span>
         </div>
       </div>
     </div>
@@ -287,15 +278,9 @@
     </div>
     
     <div class="forecast-grid" id="forecast-grid"></div>
-    <div id="debug-log">init...</div>
   </div>
 
   <script>
-    function setDebug(msg) {
-      var el = document.getElementById('debug-log');
-      if (el) el.innerHTML = msg;
-    }
-
     function getTempColor(t) {
       if (t < 0) return '#a5f3fc';
       if (t <= 10) return '#7dd3fc';
@@ -437,7 +422,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    function renderWeather(data, sourceTag) {
+    function renderWeather(data) {
       var cur = data.current;
       var curTemp = Math.round(cur.temperature_2m);
       var curColor = getTempColor(curTemp);
@@ -539,83 +524,29 @@
       var uH = upd.getHours();
       var uM = upd.getMinutes();
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
-      if (sourceTag) setDebug('Sorgente: ' + sourceTag);
     }
-
-    // Dati dinamici notturni calibrati
-    function getSensibleData() {
-      var n = new Date();
-      var h = n.getHours();
-      var isDay = (h >= 7 && h < 19) ? 1 : 0;
-      var curT = isDay ? 23 : 18;
-      return {
-        current: {
-          temperature_2m: curT,
-          relative_humidity_2m: isDay ? 68 : 82,
-          apparent_temperature: curT,
-          is_day: isDay,
-          weather_code: isDay ? 1 : 0,
-          wind_speed_10m: 9,
-          wind_direction_10m: 310,
-          wind_gusts_10m: 14
-        },
-        daily: {
-          temperature_2m_max: [24, 24, 24, 24, 24],
-          temperature_2m_min: [17, 17, 17, 16, 15],
-          sunrise: ["06:48"],
-          sunset: ["18:36"],
-          weather_code: [1, 1, 3, 1, 0],
-          precipitation_probability_max: [0, 4, 2, 8, 2],
-          time: ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
-        },
-        hourly: {
-          time: ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"],
-          temperature_2m: [18,17,17,17,16,16,17,19,21,23,24,24,24,24,23,23,22,21,20,19,19,18,18,17],
-          weather_code: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-          precipitation_probability: [0,0,0,0,0,0,0,0,0,0,5,10,14,10,0,0,0,0,0,0,0,0,0,0]
-        }
-      };
-    }
-
-    // Carica subito a schermo i dati corretti per l'orario attuale (notturno: 18°, luna, no allerta vento)
-    renderWeather(getSensibleData(), 'Locale stimato');
 
     function fetchWeatherData() {
-      setDebug('Chiamata API diretta...');
-      var targetUrl = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Europe%2FRome';
+      // Lettura interna a GitHub: stesso dominio paxos70.github.io, zero blocchi SSL/CORS
+      var targetUrl = './weather.json?t=' + new Date().getTime();
 
       try {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', targetUrl, true);
-        xhr.timeout = 5000;
         xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              try {
-                var liveData = JSON.parse(xhr.responseText);
-                renderWeather(liveData, 'Open-Meteo LIVE (XHR)');
-              } catch (e) {
-                setDebug('Errore parse JSON');
-              }
-            } else {
-              setDebug('XHR status ' + xhr.status + ' (CORS/SSL block)');
-            }
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+              var liveData = JSON.parse(xhr.responseText);
+              renderWeather(liveData);
+            } catch (e) {}
           }
         };
-        xhr.onerror = function() {
-          setDebug('XHR Error: blocco rete/certificato SSL iOS 9');
-        };
-        xhr.ontimeout = function() {
-          setDebug('XHR Timeout');
-        };
         xhr.send();
-      } catch (err) {
-        setDebug('XHR Exception: ' + err.message);
-      }
+      } catch (err) {}
     }
 
-    setTimeout(fetchWeatherData, 1500);
-    setInterval(fetchWeatherData, 15 * 60 * 1000);
+    fetchWeatherData();
+    setInterval(fetchWeatherData, 10 * 60 * 1000);
   </script>
 </body>
 </html>
