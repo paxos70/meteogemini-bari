@@ -511,22 +511,31 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
-    // Caricamento immune alla sandbox di iOS 9 tramite iniezione <script>
     function fetchWeatherData() {
-      var oldScript = document.getElementById('weather-script-tag');
-      if (oldScript && oldScript.parentNode) {
-        oldScript.parentNode.removeChild(oldScript);
-      }
+      // Legge weather.json generato dall'azione di GitHub
+      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?t=' + new Date().getTime();
 
-      var script = document.createElement('script');
-      script.id = 'weather-script-tag';
-      script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?t=' + new Date().getTime();
-      script.onload = function() {
-        if (window.METEO_DATA) {
-          renderWeather(window.METEO_DATA);
-        }
-      };
-      document.body.appendChild(script);
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', targetUrl, true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                var liveData = JSON.parse(xhr.responseText);
+                renderWeather(liveData);
+              } catch (e) {
+                document.getElementById('weather-desc').innerHTML = 'Errore dati';
+              }
+            } else {
+              document.getElementById('weather-desc').innerHTML = 'Errore rete ' + xhr.status;
+            }
+          }
+        };
+        xhr.send();
+      } catch (err) {
+        document.getElementById('weather-desc').innerHTML = 'Errore: ' + err.message;
+      }
     }
 
     fetchWeatherData();
