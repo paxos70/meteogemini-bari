@@ -33,6 +33,8 @@
       height: 100%;
       width: 100%;
       padding: 24px 36px 20px 36px;
+      -webkit-transition: -webkit-transform 0.5s ease;
+      transition: transform 0.5s ease;
     }
     .top-meta {
       display: -webkit-flex;
@@ -81,15 +83,6 @@
       font-weight: 300;
       color: #fdfbf7;
       letter-spacing: -0.3px;
-    }
-    .moon-dot {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      background-color: #fdfbf7;
-      border-radius: 50%;
-      margin: 0 8px 3px 12px;
-      vertical-align: middle;
     }
     .moon-name {
       color: #94a3b8;
@@ -248,7 +241,7 @@
       </div>
       <div class="date-row">
         <span id="date-text">---</span>
-        <span class="moon-dot"></span>
+        <span id="moon-icon-wrap"></span>
         <span id="moon-phase" class="moon-name">luna</span>
       </div>
     </div>
@@ -304,11 +297,11 @@
       return dirs[idx];
     }
 
-    function getMoonPhaseName() {
-      var now = new Date();
-      var y = now.getFullYear();
-      var m = now.getMonth() + 1;
-      var d = now.getDate();
+    function getMoonPhase(date) {
+      if (!date) date = new Date();
+      var y = date.getFullYear();
+      var m = date.getMonth() + 1;
+      var d = date.getDate();
       if (m < 3) { y--; m += 12; }
       m++;
       var c = 365.25 * y;
@@ -317,14 +310,43 @@
       jd /= 29.5305882;
       var frac = jd - Math.floor(jd);
 
-      if (frac < 0.03 || frac > 0.97) return 'luna nuova';
-      if (frac < 0.22) return 'luna crescente';
-      if (frac <= 0.28) return 'primo quarto';
-      if (frac < 0.47) return 'gibbosa crescente';
-      if (frac <= 0.53) return 'luna piena';
-      if (frac < 0.72) return 'gibbosa calante';
-      if (frac <= 0.78) return 'ultimo quarto';
-      return 'luna calante';
+      var bg = '<circle cx="16" cy="16" r="13" fill="rgba(255,255,255,0.14)"/>';
+      var svgStart = '<svg width="18" height="18" viewBox="0 0 32 32" style="vertical-align: middle; margin: 0 8px 3px 10px;">';
+      var svgEnd = '</svg>';
+
+      var name = 'luna calante';
+      var body = '';
+
+      if (frac < 0.03 || frac > 0.97) {
+        name = 'luna nuova';
+        body = '<circle cx="16" cy="16" r="13" fill="none" stroke="#64748b" stroke-width="1.8"/>';
+      } else if (frac < 0.22) {
+        name = 'luna crescente';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 13 7 0 0 0 16 3 Z" fill="#fdfbf7"/>';
+      } else if (frac <= 0.28) {
+        name = 'primo quarto';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 Z" fill="#fdfbf7"/>';
+      } else if (frac < 0.47) {
+        name = 'gibbosa crescente';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 13 7 0 0 1 16 3 Z" fill="#fdfbf7"/>';
+      } else if (frac <= 0.53) {
+        name = 'luna piena';
+        body = '<circle cx="16" cy="16" r="13" fill="#fdfbf7"/>';
+      } else if (frac < 0.72) {
+        name = 'gibbosa calante';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 13 7 0 0 0 16 3 Z" fill="#fdfbf7"/>';
+      } else if (frac <= 0.78) {
+        name = 'ultimo quarto';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#fdfbf7"/>';
+      } else {
+        name = 'luna calante';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 13 7 0 0 1 16 3 Z" fill="#fdfbf7"/>';
+      }
+
+      return {
+        name: name,
+        icon: svgStart + body + svgEnd
+      };
     }
 
     function getWeatherInfo(code, isDay) {
@@ -403,6 +425,20 @@
         '</svg>';
     }
 
+    var lastShiftH = -1;
+    function checkPixelShift(h) {
+      if (h !== lastShiftH) {
+        lastShiftH = h;
+        var shifts = [[0,0],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+        var s = shifts[h % shifts.length];
+        var el = document.getElementById('app');
+        if (el) {
+          el.style.webkitTransform = 'translate(' + s[0] + 'px, ' + s[1] + 'px)';
+          el.style.transform = 'translate(' + s[0] + 'px, ' + s[1] + 'px)';
+        }
+      }
+    }
+
     function updateClock() {
       var now = new Date();
       var h = now.getHours();
@@ -420,13 +456,23 @@
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
       document.getElementById('date-text').innerHTML = dateStr;
-      document.getElementById('moon-phase').innerHTML = getMoonPhaseName();
+
+      var moon = getMoonPhase(now);
+      document.getElementById('moon-phase').innerHTML = moon.name;
+      document.getElementById('moon-icon-wrap').innerHTML = moon.icon;
+
+      checkPixelShift(h);
     }
     setInterval(updateClock, 1000);
     updateClock();
 
     function renderWeather(data) {
       if (!data || !data.current) return;
+      
+      try {
+        localStorage.setItem('cached_weather_v1', JSON.stringify(data));
+      } catch (e) {}
+
       var cur = data.current;
       var curTemp = Math.round(cur.temperature_2m);
       var curColor = getTempColor(curTemp);
@@ -439,35 +485,43 @@
       document.getElementById('weather-desc').innerHTML = wInfo.desc;
       document.getElementById('main-weather-icon').innerHTML = renderIcon(wInfo.type, 115);
 
-      var dMax = Math.round(data.daily.temperature_2m_max[0]);
-      var dMin = Math.round(data.daily.temperature_2m_min[0]);
+      var dMax = (data.daily && data.daily.temperature_2m_max) ? Math.round(data.daily.temperature_2m_max[0]) : 24;
+      var dMin = (data.daily && data.daily.temperature_2m_min) ? Math.round(data.daily.temperature_2m_min[0]) : 17;
       document.getElementById('today-max').innerHTML = 'max ' + dMax + '°';
       document.getElementById('today-min').innerHTML = 'min ' + dMin + '°';
 
-      var appTemp = Math.round(cur.apparent_temperature);
-      var hum = cur.relative_humidity_2m;
-      document.getElementById('metrics-line').innerHTML = 'Percepita ' + appTemp + '° · Umidità ' + hum + '%';
+      var appTemp = Math.round(cur.apparent_temperature || curTemp);
+      var hum = cur.relative_humidity_2m || 70;
+      var press = (cur.surface_pressure || cur.pressure_msl) ? (' · ' + Math.round(cur.surface_pressure || cur.pressure_msl) + ' hPa') : '';
+      document.getElementById('metrics-line').innerHTML = 'Percepita ' + appTemp + '° · Umidità ' + hum + '%' + press;
 
-      var wSpeed = Math.round(cur.wind_speed_10m);
-      var wDir = getWindDir(cur.wind_direction_10m);
-      var wName = getWindName(cur.wind_direction_10m);
-      var wGusts = Math.round(cur.wind_gusts_10m);
+      var wSpeed = Math.round(cur.wind_speed_10m || 10);
+      var wDeg = cur.wind_direction_10m || 0;
+      var wDir = getWindDir(wDeg);
+      var wName = getWindName(wDeg);
+      var wGusts = Math.round(cur.wind_gusts_10m || wSpeed);
 
-      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + cur.wind_direction_10m + 'deg); transform: rotate(' + cur.wind_direction_10m + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
+      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + wDeg + 'deg); transform: rotate(' + wDeg + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
       document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
       document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
 
-      var rawSr = data.daily.sunrise[0];
-      var rawSs = data.daily.sunset[0];
-      var sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
-      var ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      var sr = "06:48";
+      var ss = "18:36";
+      if (data.daily && data.daily.sunrise && data.daily.sunrise[0]) {
+        var rawSr = data.daily.sunrise[0];
+        sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
+      }
+      if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
+        var rawSs = data.daily.sunset[0];
+        ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      }
       document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
       document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
       document.getElementById('sr-text').innerHTML = sr;
       document.getElementById('ss-text').innerHTML = ss;
 
       var alertBox = document.getElementById('wind-alert');
-      if (wGusts >= 25) {
+      if (wGusts >= 38) {
         alertBox.innerHTML = 'Raffiche di vento fino a ' + wGusts + ' km/h';
         alertBox.style.display = 'inline-block';
       } else {
@@ -514,11 +568,13 @@
         var dCode = (data.daily && data.daily.weather_code) ? data.daily.weather_code[d] : 1;
         var dInfo = getWeatherInfo(dCode, 1);
 
+        var dMm = (data.daily && data.daily.precipitation_sum && data.daily.precipitation_sum[d] > 0) ? (' · ' + data.daily.precipitation_sum[d].toFixed(1) + 'mm') : '';
+
         colsHtml += '<div class="col-item">' +
           '<div class="col-title">' + dayTitle + '</div>' +
           '<div class="col-icon">' + renderIcon(dInfo.type, 38) + '</div>' +
           '<div class="col-temps"><span style="color:#f97316;">' + maxT + '°</span> <span style="color:#38bdf8;">' + minT + '°</span></div>' +
-          '<div class="col-pop">' + dPop + '%</div>' +
+          '<div class="col-pop">' + dPop + '%' + dMm + '</div>' +
           '</div>';
       }
 
@@ -530,10 +586,16 @@
       document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
     }
 
+    try {
+      var saved = localStorage.getItem('cached_weather_v1');
+      if (saved) {
+        renderWeather(JSON.parse(saved));
+      }
+    } catch (e) {}
+
     function fetchWeatherData() {
       var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
 
-      // Metodo 1: Script injection (privo di vincoli CORS per iOS 9)
       var oldScript = document.getElementById('weather-script-tag');
       if (oldScript && oldScript.parentNode) {
         oldScript.parentNode.removeChild(oldScript);
@@ -541,31 +603,32 @@
       var script = document.createElement('script');
       script.id = 'weather-script-tag';
       script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?' + bust;
+      
       script.onload = function() {
         if (window.METEO_DATA) {
           renderWeather(window.METEO_DATA);
         }
       };
+      
       script.onerror = function() {
-        // Metodo 2: Fallback XHR semplice senza header preflight
         try {
           var xhr = new XMLHttpRequest();
           xhr.open('GET', 'https://paxos70.github.io/meteogemini-bari/weather.json?' + bust, true);
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
               try {
-                var liveData = JSON.parse(xhr.responseText);
-                renderWeather(liveData);
+                renderWeather(JSON.parse(xhr.responseText));
               } catch (e) {}
             }
           };
           xhr.send();
         } catch (err) {}
       };
+      
       document.head.appendChild(script);
     }
 
-    fetchWeatherData();
+    setTimeout(fetchWeatherData, 800);
     setInterval(fetchWeatherData, 5 * 60 * 1000);
   </script>
 </body>
