@@ -512,12 +512,14 @@
     }
 
     function fetchWeatherData() {
-      // Legge weather.json generato dall'azione di GitHub
-      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?t=' + new Date().getTime();
+      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?r=' + Math.random() + '&t=' + new Date().getTime();
 
       try {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', targetUrl, true);
+        xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        xhr.setRequestHeader('Pragma', 'no-cache');
+        xhr.setRequestHeader('Expires', '0');
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
