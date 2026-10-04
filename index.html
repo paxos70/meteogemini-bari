@@ -512,32 +512,38 @@
     }
 
     function fetchWeatherData() {
-      var targetUrl = 'https://paxos70.github.io/meteogemini-bari/weather.json?r=' + Math.random() + '&t=' + new Date().getTime();
+      var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
 
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', targetUrl, true);
-        xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        xhr.setRequestHeader('Pragma', 'no-cache');
-        xhr.setRequestHeader('Expires', '0');
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
+      // Metodo 1: Script injection (privo di vincoli CORS per iOS 9)
+      var oldScript = document.getElementById('weather-script-tag');
+      if (oldScript && oldScript.parentNode) {
+        oldScript.parentNode.removeChild(oldScript);
+      }
+      var script = document.createElement('script');
+      script.id = 'weather-script-tag';
+      script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?' + bust;
+      script.onload = function() {
+        if (window.METEO_DATA) {
+          renderWeather(window.METEO_DATA);
+        }
+      };
+      script.onerror = function() {
+        // Metodo 2: Fallback XHR semplice senza header preflight
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'https://paxos70.github.io/meteogemini-bari/weather.json?' + bust, true);
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
               try {
                 var liveData = JSON.parse(xhr.responseText);
                 renderWeather(liveData);
-              } catch (e) {
-                document.getElementById('weather-desc').innerHTML = 'Errore dati';
-              }
-            } else {
-              document.getElementById('weather-desc').innerHTML = 'Errore rete ' + xhr.status;
+              } catch (e) {}
             }
-          }
-        };
-        xhr.send();
-      } catch (err) {
-        document.getElementById('weather-desc').innerHTML = 'Errore: ' + err.message;
-      }
+          };
+          xhr.send();
+        } catch (err) {}
+      };
+      document.head.appendChild(script);
     }
 
     fetchWeatherData();
