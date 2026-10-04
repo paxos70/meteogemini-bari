@@ -305,7 +305,26 @@
     }
 
     function getMoonPhaseName() {
-      return 'gibbosa calante';
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = now.getMonth() + 1;
+      var d = now.getDate();
+      if (m < 3) { y--; m += 12; }
+      m++;
+      var c = 365.25 * y;
+      var e = 30.6 * m;
+      var jd = c + e + d - 694039.09;
+      jd /= 29.5305882;
+      var frac = jd - Math.floor(jd);
+
+      if (frac < 0.03 || frac > 0.97) return 'luna nuova';
+      if (frac < 0.22) return 'luna crescente';
+      if (frac <= 0.28) return 'primo quarto';
+      if (frac < 0.47) return 'gibbosa crescente';
+      if (frac <= 0.53) return 'luna piena';
+      if (frac < 0.72) return 'gibbosa calante';
+      if (frac <= 0.78) return 'ultimo quarto';
+      return 'luna calante';
     }
 
     function getWeatherInfo(code, isDay) {
