@@ -302,7 +302,7 @@
       return dirs[idx];
     }
 
-    function getMoonPhase(date) {
+function getMoonPhase(date) {
       if (!date) date = new Date();
       var y = date.getFullYear();
       var m = date.getMonth() + 1;
@@ -315,8 +315,9 @@
       jd /= 29.5305882;
       var frac = jd - Math.floor(jd);
 
-      var bg = '<circle cx="16" cy="16" r="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>';
-      var svgStart = '<svg width="22" height="22" viewBox="0 0 32 32" style="vertical-align: -2px; margin: 0 10px 0 12px; display: inline-block;">';
+      // Sfera in ombra ben visibile, identica a Perplexity
+      var bg = '<circle cx="16" cy="16" r="13" fill="rgba(255,255,255,0.22)"/>';
+      var svgStart = '<svg width="22" height="22" viewBox="0 0 32 32" style="vertical-align: -3px; margin: 0 8px 0 14px; display: inline-block;">';
       var svgEnd = '</svg>';
 
       var name = 'luna calante';
@@ -324,28 +325,28 @@
 
       if (frac < 0.03 || frac > 0.97) {
         name = 'luna nuova';
-        body = '<circle cx="16" cy="16" r="12" fill="rgba(255,255,255,0.04)" stroke="#64748b" stroke-width="1.4" stroke-dasharray="2.5 2.5"/>';
+        body = '<circle cx="16" cy="16" r="13" fill="rgba(255,255,255,0.18)"/>';
       } else if (frac < 0.22) {
         name = 'luna crescente';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 1 16 28 A 6 12 0 0 1 16 4 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 8 13 0 0 0 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.28) {
         name = 'primo quarto';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 1 16 28 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 Z" fill="#fdfbf7"/>';
       } else if (frac < 0.47) {
         name = 'gibbosa crescente';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 1 16 28 A 6 12 0 0 0 16 4 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 8 13 0 0 1 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.53) {
         name = 'luna piena';
-        body = '<circle cx="16" cy="16" r="12" fill="#fdfbf7"/>';
+        body = '<circle cx="16" cy="16" r="13" fill="#fdfbf7"/>';
       } else if (frac < 0.72) {
         name = 'gibbosa calante';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 0 16 28 A 6 12 0 0 1 16 4 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 8 13 0 0 0 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.78) {
         name = 'ultimo quarto';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 0 16 28 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#fdfbf7"/>';
       } else {
         name = 'luna calante';
-        body = bg + '<path d="M 16 4 A 12 12 0 0 0 16 28 A 6 12 0 0 0 16 4 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 8 13 0 0 1 16 3 Z" fill="#fdfbf7"/>';
       }
 
       return {
