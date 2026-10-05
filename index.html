@@ -143,13 +143,14 @@
       font-weight: 300;
     }
     .wind-line, .sun-line {
-      font-size: 19px;
+      font-size: 18px;
       color: #94a3b8;
       font-weight: 300;
       display: -webkit-flex;
       display: flex;
       -webkit-align-items: center;
       align-items: center;
+      white-space: nowrap;
     }
     .wind-arrow-svg {
       display: inline-block;
@@ -158,13 +159,17 @@
       margin-right: 6px;
       -webkit-transform-origin: center;
       transform-origin: center;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
     .sun-icon-svg {
       display: inline-block;
-      width: 19px;
-      height: 19px;
+      width: 18px;
+      height: 18px;
       margin-right: 6px;
       vertical-align: middle;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
     .alert-container {
       text-align: center;
