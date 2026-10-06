@@ -21,7 +21,7 @@
       height: 100%;
       background-color: #0b0c10;
       color: #fdfbf7;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
       overflow: hidden;
     }
     #app {
@@ -256,22 +256,22 @@
     
     <div class="main-weather" onclick="fetchWeatherData()">
       <div class="main-icon-wrap" id="main-weather-icon"></div>
-      <div class="main-temp" id="current-temp">17°</div>
+      <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Cielo sereno</div>
+        <div class="condition-text" id="weather-desc">Caricamento...</div>
         <div class="minmax-line">
-          <span class="max-t" id="today-max">max 24°</span>
-          <span class="min-t" id="today-min">min 16°</span>
+          <span class="max-t" id="today-max">max --°</span>
+          <span class="min-t" id="today-min">min --°</span>
         </div>
-        <div class="metrics-line" id="metrics-line">Percepita 17° · Umidità 75%</div>
+        <div class="metrics-line" id="metrics-line">Percepita --° · Umidità --%</div>
         <div class="wind-line" id="wind-line">
           <span id="wind-icon-wrap"></span>
-          <span id="wind-text">Vento in rilevamento...</span>
+          <span id="wind-text">Vento -- km/h</span>
         </div>
         <div class="sun-line" id="sun-line">
-          <span id="sunrise-icon"></span><span id="sr-text">06:54</span>
+          <span id="sunrise-icon"></span><span id="sr-text">--:--</span>
           &nbsp;&nbsp;·&nbsp;&nbsp;
-          <span id="sunset-icon"></span><span id="ss-text">18:26</span>
+          <span id="sunset-icon"></span><span id="ss-text">--:--</span>
         </div>
       </div>
     </div>
@@ -284,6 +284,8 @@
   </div>
 
   <script>
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
     function getTempColor(t) {
       if (t < 0) return '#a5f3fc';
       if (t <= 10) return '#7dd3fc';
@@ -307,22 +309,16 @@
 
     function getMoonPhaseName() {
       var now = new Date();
-      var y = now.getFullYear();
-      var m = now.getMonth() + 1;
-      var d = now.getDate();
-      if (m < 3) { y--; m += 12; }
-      m++;
-      var c = 365.25 * y;
-      var e = 30.6 * m;
-      var jd = c + e + d - 694039.09;
-      jd /= 29.5305882;
-      var frac = jd - Math.floor(jd);
+      var diffDays = (now.getTime() - new Date(2026, 0, 18).getTime()) / (1000 * 60 * 60 * 24);
+      var cycle = 29.53058867;
+      var frac = (diffDays % cycle) / cycle;
+      if (frac < 0) frac += 1;
 
-      if (frac < 0.03 || frac > 0.97) return 'luna nuova';
+      if (frac < 0.04 || frac > 0.96) return 'luna nuova';
       if (frac < 0.22) return 'luna crescente';
       if (frac <= 0.28) return 'primo quarto';
-      if (frac < 0.47) return 'gibbosa crescente';
-      if (frac <= 0.53) return 'luna piena';
+      if (frac < 0.46) return 'gibbosa crescente';
+      if (frac <= 0.54) return 'luna piena';
       if (frac < 0.72) return 'gibbosa calante';
       if (frac <= 0.78) return 'ultimo quarto';
       return 'luna calante';
@@ -348,14 +344,10 @@
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
           '<circle cx="32" cy="32" r="14" fill="#fbbf24"/>' +
           '<g stroke="#fbbf24" stroke-width="4.5" stroke-linecap="round">' +
-          '<line x1="32" y1="5" x2="32" y2="11"/>' +
-          '<line x1="32" y1="53" x2="32" y2="59"/>' +
-          '<line x1="5" y1="32" x2="11" y2="32"/>' +
-          '<line x1="53" y1="32" x2="59" y2="32"/>' +
-          '<line x1="13" y1="13" x2="17.5" y2="17.5"/>' +
-          '<line x1="46.5" y1="46.5" x2="51" y2="51"/>' +
-          '<line x1="13" y1="51" x2="17.5" y2="46.5"/>' +
-          '<line x1="46.5" y1="17.5" x2="51" y2="13"/>' +
+          '<line x1="32" y1="5" x2="32" y2="11"/><line x1="32" y1="53" x2="32" y2="59"/>' +
+          '<line x1="5" y1="32" x2="11" y2="32"/><line x1="53" y1="32" x2="59" y2="32"/>' +
+          '<line x1="13" y1="13" x2="17.5" y2="17.5"/><line x1="46.5" y1="46.5" x2="51" y2="51"/>' +
+          '<line x1="13" y1="51" x2="17.5" y2="46.5"/><line x1="46.5" y1="17.5" x2="51" y2="13"/>' +
           '</g></svg>';
       } else if (type === 'moon') {
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
@@ -379,13 +371,11 @@
           '</svg>';
       } else {
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
-          '<g>' +
-          '<circle cx="21" cy="21" r="10.5" fill="#fbbf24"/>' +
+          '<g><circle cx="21" cy="21" r="10.5" fill="#fbbf24"/>' +
           '<line x1="21" y1="4" x2="21" y2="8" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
           '<line x1="9" y1="9" x2="12" y2="12" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
           '<line x1="4" y1="21" x2="8" y2="21" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
-          '<line x1="9" y1="33" x2="12" y2="30" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/>' +
-          '</g>' +
+          '<line x1="9" y1="33" x2="12" y2="30" stroke="#fbbf24" stroke-width="3.2" stroke-linecap="round"/></g>' +
           '<path d="M54 50 H18 c-6.5 0-11.8-5-11.8-11.2 0-5.5 3.9-10.1 9.3-11 C17 19.5 24.5 13 33.5 13 c8.5 0 15.6 5.8 17.5 13.8 C55.5 27.5 59 32 59 37.5 59 44.4 56.8 50 54 50 Z" fill="#e2e8f0"/>' +
           '</svg>';
       }
@@ -410,22 +400,13 @@
     }
 
     function updateClock() {
-      var now = new Date();
-      var h = now.getHours();
-      var m = now.getMinutes();
-      var s = now.getSeconds();
-      var hStr = (h < 10 ? '0' : '') + h;
-      var mStr = (m < 10 ? '0' : '') + m;
-      var sStr = (s < 10 ? '0' : '') + s;
-
-      document.getElementById('clock-hm').innerHTML = hStr + ':' + mStr;
-      document.getElementById('clock-s').innerHTML = sStr;
+      var d = new Date();
+      document.getElementById('clock-hm').innerHTML = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      document.getElementById('clock-s').innerHTML = pad(d.getSeconds());
 
       var days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
       var months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
-      var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
-
-      document.getElementById('date-text').innerHTML = dateStr;
+      document.getElementById('date-text').innerHTML = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
       document.getElementById('moon-phase').innerHTML = getMoonPhaseName();
     }
     setInterval(updateClock, 1000);
@@ -550,9 +531,7 @@
       document.getElementById('forecast-grid').innerHTML = colsHtml;
 
       var upd = new Date();
-      var uH = upd.getHours();
-      var uM = upd.getMinutes();
-      document.getElementById('last-update').innerHTML = 'aggiornato alle ' + (uH < 10 ? '0' : '') + uH + ':' + (uM < 10 ? '0' : '') + uM;
+      document.getElementById('last-update').innerHTML = 'aggiornato alle ' + pad(upd.getHours()) + ':' + pad(upd.getMinutes());
     }
 
     function fetchWeatherData() {
@@ -569,4 +548,11 @@
           renderWeather(window.METEO_DATA);
         }
       };
-      document.body
+      document.body.appendChild(script);
+    }
+
+    fetchWeatherData();
+    setInterval(fetchWeatherData, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
