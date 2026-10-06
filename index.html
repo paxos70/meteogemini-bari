@@ -250,28 +250,28 @@
       <div class="date-row">
         <span id="date-text">---</span>
         <span class="moon-dot"></span>
-        <span id="moon-phase" class="moon-name">luna</span>
+        <span id="moon-phase" class="moon-name">luna calante</span>
       </div>
     </div>
     
     <div class="main-weather" onclick="fetchWeatherData()">
       <div class="main-icon-wrap" id="main-weather-icon"></div>
-      <div class="main-temp" id="current-temp">--°</div>
+      <div class="main-temp" id="current-temp">17°</div>
       <div class="main-details">
-        <div class="condition-text" id="weather-desc">Caricamento...</div>
+        <div class="condition-text" id="weather-desc">Cielo sereno</div>
         <div class="minmax-line">
-          <span class="max-t" id="today-max">max --°</span>
-          <span class="min-t" id="today-min">min --°</span>
+          <span class="max-t" id="today-max">max 24°</span>
+          <span class="min-t" id="today-min">min 16°</span>
         </div>
-        <div class="metrics-line" id="metrics-line">Percepita --° · Umidità --%</div>
+        <div class="metrics-line" id="metrics-line">Percepita 17° · Umidità 75%</div>
         <div class="wind-line" id="wind-line">
           <span id="wind-icon-wrap"></span>
-          <span id="wind-text">Vento -- km/h</span>
+          <span id="wind-text">Vento in rilevamento...</span>
         </div>
         <div class="sun-line" id="sun-line">
-          <span id="sunrise-icon"></span><span id="sr-text">--:--</span>
+          <span id="sunrise-icon"></span><span id="sr-text">06:54</span>
           &nbsp;&nbsp;·&nbsp;&nbsp;
-          <span id="sunset-icon"></span><span id="ss-text">--:--</span>
+          <span id="sunset-icon"></span><span id="ss-text">18:26</span>
         </div>
       </div>
     </div>
@@ -557,7 +557,6 @@
 
     function fetchWeatherData() {
       var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
-
       var oldScript = document.getElementById('weather-script-tag');
       if (oldScript && oldScript.parentNode) {
         oldScript.parentNode.removeChild(oldScript);
@@ -570,26 +569,4 @@
           renderWeather(window.METEO_DATA);
         }
       };
-      script.onerror = function() {
-        try {
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', 'https://paxos70.github.io/meteogemini-bari/weather.json?' + bust, true);
-          xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-              try {
-                var liveData = JSON.parse(xhr.responseText);
-                renderWeather(liveData);
-              } catch (e) {}
-            }
-          };
-          xhr.send();
-        } catch (err) {}
-      };
-      document.head.appendChild(script);
-    }
-
-    fetchWeatherData();
-    setInterval(fetchWeatherData, 5 * 60 * 1000);
-  </script>
-</body>
-</html>
+      document.body
