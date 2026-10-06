@@ -370,19 +370,20 @@
       }
     }
 
-    function getWeatherInfo(code, isDay) {
-      var day = (isDay === 0) ? 0 : 1;
+        function getWeatherInfo(code, isDay) {
+      var day = (isDay === 1 || isDay === true);
       if (code === 0) return { desc: day ? 'Sereno' : 'Cielo sereno', type: day ? 'sun' : 'moon' };
       if (code === 1) return { desc: 'Poco nuvoloso', type: day ? 'cloud-sun' : 'moon-cloud' };
-      if (code === 2) return { desc: 'Parzialmente nuvoloso', type: day ? 'cloud-sun' : 'cloud-moon' };
+      if (code === 2) return { desc: 'Parzialmente nuvoloso', type: day ? 'cloud-sun' : 'moon-cloud' };
       if (code === 3) return { desc: 'Coperto', type: 'cloud' };
       if (code === 45 || code === 48) return { desc: 'Nebbia', type: 'cloud' };
       if (code >= 51 && code <= 67) return { desc: 'Pioggia', type: 'rain' };
       if (code >= 71 && code <= 77) return { desc: 'Neve', type: 'rain' };
       if (code >= 80 && code <= 82) return { desc: 'Rovesci di pioggia', type: 'rain' };
       if (code >= 95) return { desc: 'Temporale', type: 'rain' };
-      return { desc: day ? 'Poco nuvoloso' : 'Cielo sereno', type: day ? 'cloud-sun' : 'moon' };
+      return { desc: day ? 'Poco nuvoloso' : 'Cielo sereno', type: day ? 'cloud-sun' : 'moon-cloud' };
     }
+
 
     function renderIcon(type, size) {
       var s = size ? size : 40;
