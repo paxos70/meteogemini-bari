@@ -457,10 +457,14 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Toggle attenuazione luce al tocco dello sfondo
+    // Toggle attenuazione luce compatibile con iOS 9 (senza .closest)
     document.addEventListener('touchend', function (e) {
-      if (e.target.closest && (e.target.closest('.clock-container') || e.target.closest('.main-weather'))) {
-        return;
+      var el = e.target;
+      while (el && el !== document.body) {
+        if (el.className && (el.className.indexOf('clock-container') !== -1 || el.className.indexOf('main-weather') !== -1)) {
+          return;
+        }
+        el = el.parentNode;
       }
       var isNight = document.body.className === 'night';
       manualDim = !isNight;
