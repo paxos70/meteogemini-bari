@@ -143,14 +143,13 @@
       font-weight: 300;
     }
     .wind-line, .sun-line {
-      font-size: 18px;
+      font-size: 19px;
       color: #94a3b8;
       font-weight: 300;
       display: -webkit-flex;
       display: flex;
       -webkit-align-items: center;
       align-items: center;
-      white-space: nowrap;
     }
     .wind-arrow-svg {
       display: inline-block;
@@ -159,17 +158,13 @@
       margin-right: 6px;
       -webkit-transform-origin: center;
       transform-origin: center;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
     }
     .sun-icon-svg {
       display: inline-block;
-      width: 18px;
-      height: 18px;
+      width: 19px;
+      height: 19px;
       margin-right: 6px;
       vertical-align: middle;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
     }
     .alert-container {
       text-align: center;
@@ -239,7 +234,7 @@
       <div id="last-update">aggiornato alle --:--</div>
     </div>
     
-    <div class="clock-container" onclick="fetchWeatherData()">
+    <div class="clock-container" onclick="fetchWeatherData(true)">
       <div class="time-wrapper">
         <span id="clock-hm">--:--</span>
         <span id="clock-s" class="seconds-inline">--</span>
@@ -251,7 +246,7 @@
       </div>
     </div>
     
-    <div class="main-weather" onclick="fetchWeatherData()">
+    <div class="main-weather" onclick="fetchWeatherData(true)">
       <div class="main-icon-wrap" id="main-weather-icon"></div>
       <div class="main-temp" id="current-temp">--°</div>
       <div class="main-details">
@@ -315,8 +310,8 @@
       jd /= 29.5305882;
       var frac = jd - Math.floor(jd);
 
-      var bg = '<circle cx="16" cy="16" r="13" fill="#334155"/>';
-      var svgStart = '<svg width="22" height="22" viewBox="0 0 32 32" style="vertical-align: -3px; margin: 0 8px 0 14px; display: inline-block;">';
+      var bg = '<circle cx="16" cy="16" r="13" fill="rgba(255,255,255,0.14)"/>';
+      var svgStart = '<svg width="18" height="18" viewBox="0 0 32 32" style="vertical-align: middle; margin: 0 8px 3px 10px;">';
       var svgEnd = '</svg>';
 
       var name = 'luna calante';
@@ -324,28 +319,28 @@
 
       if (frac < 0.03 || frac > 0.97) {
         name = 'luna nuova';
-        body = '<circle cx="16" cy="16" r="13" fill="#334155"/>';
+        body = '<circle cx="16" cy="16" r="13" fill="none" stroke="#64748b" stroke-width="1.8"/>';
       } else if (frac < 0.22) {
         name = 'luna crescente';
-        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 5 13 0 0 0 16 3 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 13 7 0 0 0 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.28) {
         name = 'primo quarto';
         body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 Z" fill="#fdfbf7"/>';
       } else if (frac < 0.47) {
         name = 'gibbosa crescente';
-        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 5 13 0 0 1 16 3 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 1 16 29 A 13 7 0 0 1 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.53) {
         name = 'luna piena';
         body = '<circle cx="16" cy="16" r="13" fill="#fdfbf7"/>';
       } else if (frac < 0.72) {
         name = 'gibbosa calante';
-        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 5 13 0 0 0 16 3 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 13 7 0 0 0 16 3 Z" fill="#fdfbf7"/>';
       } else if (frac <= 0.78) {
         name = 'ultimo quarto';
         body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#fdfbf7"/>';
       } else {
         name = 'luna calante';
-        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 5 13 0 0 1 16 3 Z" fill="#fdfbf7"/>';
+        body = bg + '<path d="M 16 3 A 13 13 0 0 0 16 29 A 13 7 0 0 1 16 3 Z" fill="#fdfbf7"/>';
       }
 
       return {
@@ -598,55 +593,42 @@
       }
     } catch (e) {}
 
-    function fetchWeatherData() {
-      var bust = '&_t=' + new Date().getTime();
-      var apiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum&timezone=Europe%2FRome&models=best_match' + bust;
+    function fetchWeatherData(manual) {
+      if (manual) {
+        document.getElementById('last-update').innerHTML = 'aggiornamento...';
+      }
+
+      var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
+      var targetUrl = './weather.json?' + bust;
 
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', apiUrl, true);
-        xhr.timeout = 7000;
-        xhr.onreadystatechange = function() {
+        xhr.open('GET', targetUrl, true);
+        xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
+            if (xhr.status === 200 || xhr.status === 0) {
               try {
-                var data = JSON.parse(xhr.responseText);
-                renderWeather(data);
+                var liveData = JSON.parse(xhr.responseText);
+                renderWeather(liveData);
               } catch (e) {
-                fallbackGitHub();
+                if (manual) document.getElementById('last-update').innerHTML = 'dati non validi';
               }
             } else {
-              fallbackGitHub();
+              if (manual) document.getElementById('last-update').innerHTML = 'errore ' + xhr.status;
             }
           }
         };
-        xhr.ontimeout = function() { fallbackGitHub(); };
-        xhr.onerror = function() { fallbackGitHub(); };
+        xhr.onerror = function () {
+          if (manual) document.getElementById('last-update').innerHTML = 'connessione fallita';
+        };
         xhr.send();
       } catch (err) {
-        fallbackGitHub();
+        if (manual) document.getElementById('last-update').innerHTML = 'errore locale';
       }
     }
 
-    function fallbackGitHub() {
-      var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
-      var oldScript = document.getElementById('weather-script-tag');
-      if (oldScript && oldScript.parentNode) {
-        oldScript.parentNode.removeChild(oldScript);
-      }
-      var script = document.createElement('script');
-      script.id = 'weather-script-tag';
-      script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?' + bust;
-      script.onload = function() {
-        if (window.METEO_DATA) {
-          renderWeather(window.METEO_DATA);
-        }
-      };
-      document.head.appendChild(script);
-    }
-
-    setTimeout(fetchWeatherData, 500);
-    setInterval(fetchWeatherData, 10 * 60 * 1000);
+    setTimeout(function() { fetchWeatherData(false); }, 600);
+    setInterval(function() { fetchWeatherData(false); }, 5 * 60 * 1000);
   </script>
 </body>
 </html>
