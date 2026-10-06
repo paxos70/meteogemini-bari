@@ -14,6 +14,7 @@
       padding: 0;
       -webkit-user-select: none;
       user-select: none;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
     }
     html, body {
       width: 100%;
@@ -33,6 +34,8 @@
       height: 100%;
       width: 100%;
       padding: 24px 36px 20px 36px;
+      position: relative;
+      z-index: 1;
     }
     .top-meta {
       display: -webkit-flex;
@@ -82,11 +85,14 @@
       color: #fdfbf7;
       letter-spacing: -0.3px;
     }
-    .moon-wrap {
+    .moon-dot {
       display: inline-block;
-      vertical-align: middle;
+      width: 14px;
+      height: 14px;
+      background-color: #fdfbf7;
+      border-radius: 50%;
       margin: 0 8px 3px 12px;
-      line-height: 1;
+      vertical-align: middle;
     }
     .moon-name {
       color: #94a3b8;
@@ -229,6 +235,21 @@
       color: #38bdf8;
       font-weight: 400;
     }
+
+    /* Dimmer notturno */
+    #dim {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      -webkit-transition: opacity 1.5s;
+      transition: opacity 1.5s;
+      z-index: 10;
+    }
+    body.night #dim {
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -245,7 +266,7 @@
       </div>
       <div class="date-row">
         <span id="date-text">---</span>
-        <span id="moon-icon" class="moon-wrap"></span>
+        <span class="moon-dot"></span>
         <span id="moon-phase" class="moon-name">luna</span>
       </div>
     </div>
@@ -279,7 +300,11 @@
     <div class="forecast-grid" id="forecast-grid"></div>
   </div>
 
+  <div id="dim"></div>
+
   <script>
+    var manualDim = null;
+
     function getTempColor(t) {
       if (t < 0) return '#a5f3fc';
       if (t <= 10) return '#7dd3fc';
@@ -324,53 +349,7 @@
       return 'luna calante';
     }
 
-    function renderMoonIcon(phase) {
-      var s = 18;
-      var strokeCircle = '<circle cx="12" cy="12" r="9.5" stroke="rgba(253, 251, 247, 0.3)" stroke-width="1.2" fill="none"/>';
-
-      if (phase === 'luna nuova') {
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' + strokeCircle + '</svg>';
-      } else if (phase === 'luna piena') {
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#fdfbf7"/></svg>';
-      } else if (phase === 'luna calante' || phase === 'calante') {
-        // Falcetto nitido a sinistra con punte affilate senza tagli
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 0 12 21.5 A 6.5 9.5 0 0 1 12 2.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      } else if (phase === 'luna crescente') {
-        // Falcetto nitido a destra
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 1 12 21.5 A 6.5 9.5 0 0 0 12 2.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      } else if (phase === 'primo quarto') {
-        // Mezzo cerchio illuminato a destra
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 1 12 21.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      } else if (phase === 'ultimo quarto') {
-        // Mezzo cerchio illuminato a sinistra
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 0 12 21.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      } else if (phase === 'gibbosa crescente') {
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 1 12 21.5 A 4 9.5 0 0 1 12 2.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      } else {
-        // gibbosa calante
-        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24">' +
-          strokeCircle +
-          '<path d="M12 2.5 A 9.5 9.5 0 0 0 12 21.5 A 4 9.5 0 0 0 12 2.5 Z" fill="#fdfbf7"/>' +
-          '</svg>';
-      }
-    }
-
-        function getWeatherInfo(code, isDay) {
+    function getWeatherInfo(code, isDay) {
       var day = (isDay === 1 || isDay === true);
       if (code === 0) return { desc: day ? 'Sereno' : 'Cielo sereno', type: day ? 'sun' : 'moon' };
       if (code === 1) return { desc: 'Poco nuvoloso', type: day ? 'cloud-sun' : 'moon-cloud' };
@@ -383,7 +362,6 @@
       if (code >= 95) return { desc: 'Temporale', type: 'rain' };
       return { desc: day ? 'Poco nuvoloso' : 'Cielo sereno', type: day ? 'cloud-sun' : 'moon-cloud' };
     }
-
 
     function renderIcon(type, size) {
       var s = size ? size : 40;
@@ -400,9 +378,14 @@
           '<line x1="13" y1="51" x2="17.5" y2="46.5"/>' +
           '<line x1="46.5" y1="17.5" x2="51" y2="13"/>' +
           '</g></svg>';
-      } else if (type === 'moon' || type === 'moon-cloud') {
+      } else if (type === 'moon') {
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
           '<path d="M44 34.5 C43 45.5 33.5 54 22 53 C18.5 52.7 15.3 51.5 12.5 49.7 C19.5 51.5 28.5 48.5 33.5 42 C38.5 35.5 38 26.5 32.5 20.5 C38.5 22.5 43.5 27.5 44 34.5 Z" fill="#f8fafc"/>' +
+          '</svg>';
+      } else if (type === 'moon-cloud') {
+        return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
+          '<path d="M38 28 C37.5 34 32 39 25 38 C23 37.8 21 37 19.5 36 C23.5 37 28.5 35 31.5 31 C34.5 27 34 21.5 31 18 C34 19 37.5 22.5 38 28 Z" fill="#f8fafc"/>' +
+          '<path d="M54 50 H18 c-6.5 0-11.8-5-11.8-11.2 0-5.5 3.9-10.1 9.3-11 C17 19.5 24.5 13 33.5 13 c8.5 0 15.6 5.8 17.5 13.8 C55.5 27.5 59 32 59 37.5 59 44.4 56.8 50 54 50 Z" fill="#e2e8f0"/>' +
           '</svg>';
       } else if (type === 'cloud') {
         return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64">' +
@@ -463,13 +446,26 @@
       var months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
       var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
-      var phase = getMoonPhaseName();
       document.getElementById('date-text').innerHTML = dateStr;
-      document.getElementById('moon-phase').innerHTML = phase;
-      document.getElementById('moon-icon').innerHTML = renderMoonIcon(phase);
+      document.getElementById('moon-phase').innerHTML = getMoonPhaseName();
+
+      // Modalità notte: 23:00 - 07:00
+      var isNight = (h >= 23 || h < 7);
+      var dim = (manualDim === null) ? isNight : manualDim;
+      document.body.className = dim ? 'night' : '';
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Toggle attenuazione luce al tocco dello sfondo
+    document.addEventListener('touchend', function (e) {
+      if (e.target.closest && (e.target.closest('.clock-container') || e.target.closest('.main-weather'))) {
+        return;
+      }
+      var isNight = document.body.className === 'night';
+      manualDim = !isNight;
+      updateClock();
+    }, false);
 
     function renderWeather(data) {
       if (!data || !data.current) return;
@@ -485,28 +481,42 @@
       document.getElementById('weather-desc').innerHTML = wInfo.desc;
       document.getElementById('main-weather-icon').innerHTML = renderIcon(wInfo.type, 115);
 
-      var dMax = Math.round(data.daily.temperature_2m_max[0]);
-      var dMin = Math.round(data.daily.temperature_2m_min[0]);
+      var dMax = (data.daily && data.daily.temperature_2m_max) ? Math.round(data.daily.temperature_2m_max[0]) : 24;
+      var dMin = (data.daily && data.daily.temperature_2m_min) ? Math.round(data.daily.temperature_2m_min[0]) : 17;
       document.getElementById('today-max').innerHTML = 'max ' + dMax + '°';
       document.getElementById('today-min').innerHTML = 'min ' + dMin + '°';
 
-      var appTemp = Math.round(cur.apparent_temperature);
-      var hum = cur.relative_humidity_2m;
+      var appTemp = Math.round(cur.apparent_temperature || curTemp);
+      var hum = cur.relative_humidity_2m || 70;
       document.getElementById('metrics-line').innerHTML = 'Percepita ' + appTemp + '° · Umidità ' + hum + '%';
 
-      var wSpeed = Math.round(cur.wind_speed_10m);
-      var wDir = getWindDir(cur.wind_direction_10m);
-      var wName = getWindName(cur.wind_direction_10m);
-      var wGusts = Math.round(cur.wind_gusts_10m);
+      // Gestione sicura del vento senza undefined
+      var wSpeed = Math.round(cur.wind_speed_10m || 0);
+      var hasDir = (cur.wind_direction_10m !== undefined && cur.wind_direction_10m !== null);
+      var wDeg = hasDir ? cur.wind_direction_10m : 0;
+      var wDir = hasDir ? getWindDir(wDeg) : 'N';
+      var wName = hasDir ? getWindName(wDeg) : 'Tramontana';
+      var wGusts = (cur.wind_gusts_10m !== undefined && cur.wind_gusts_10m !== null) ? Math.round(cur.wind_gusts_10m) : wSpeed;
 
-      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + cur.wind_direction_10m + 'deg); transform: rotate(' + cur.wind_direction_10m + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
+      var arrowSvg = '<svg class="wind-arrow-svg" style="-webkit-transform: rotate(' + wDeg + 'deg); transform: rotate(' + wDeg + 'deg);" viewBox="0 0 24 24" fill="#cbd5e1"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>';
       document.getElementById('wind-icon-wrap').innerHTML = arrowSvg;
-      document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
 
-      var rawSr = data.daily.sunrise[0];
-      var rawSs = data.daily.sunset[0];
-      var sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
-      var ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      if (hasDir) {
+        document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h da ' + wDir + ' · ' + wName + ' · raffiche ' + wGusts + ' km/h';
+      } else {
+        document.getElementById('wind-text').innerHTML = 'Vento ' + wSpeed + ' km/h';
+      }
+
+      var sr = "06:48";
+      var ss = "18:36";
+      if (data.daily && data.daily.sunrise && data.daily.sunrise[0]) {
+        var rawSr = data.daily.sunrise[0];
+        sr = rawSr.indexOf('T') !== -1 ? rawSr.split('T')[1] : rawSr;
+      }
+      if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
+        var rawSs = data.daily.sunset[0];
+        ss = rawSs.indexOf('T') !== -1 ? rawSs.split('T')[1] : rawSs;
+      }
       document.getElementById('sunrise-icon').innerHTML = renderSunriseIcon();
       document.getElementById('sunset-icon').innerHTML = renderSunsetIcon();
       document.getElementById('sr-text').innerHTML = sr;
@@ -520,29 +530,36 @@
         alertBox.style.display = 'none';
       }
 
-      var nowH = new Date().getHours();
+      // Previsioni orarie allineate al cursore del dato
       var colsHtml = '';
+      var hr = data.hourly;
+      var nowKey = cur.time ? cur.time.substr(0, 13) : '';
+      var start = 0;
 
-      var hSteps = [nowH + 2, nowH + 5, nowH + 8, nowH + 11];
-      for (var i = 0; i < hSteps.length; i++) {
-        var hIdx = hSteps[i] % 24;
-        var hHour = hIdx;
-        var hTemp = 18;
-        var hPop = 0;
-        var hCode = 1;
-
-        if (data.hourly && data.hourly.temperature_2m && data.hourly.temperature_2m[hIdx] !== undefined) {
-          hTemp = Math.round(data.hourly.temperature_2m[hIdx]);
-          hPop = data.hourly.precipitation_probability ? (data.hourly.precipitation_probability[hIdx] || 0) : 0;
-          hCode = data.hourly.weather_code ? data.hourly.weather_code[hIdx] : 1;
+      if (hr && hr.time) {
+        for (var idx = 0; idx < hr.time.length; idx++) {
+          if (hr.time[idx].substr(0, 13) >= nowKey) {
+            start = idx;
+            break;
+          }
         }
+      }
 
-        var hIsDay = (hHour >= 6 && hHour < 19) ? 1 : 0;
+      for (var k = 1; k <= 4; k++) {
+        var hIdx = start + k * 3;
+        if (!hr || !hr.time || hIdx >= hr.time.length) break;
+
+        var hHourStr = hr.time[hIdx].substr(11, 2);
+        var hTemp = Math.round(hr.temperature_2m[hIdx]);
+        var hPop = hr.precipitation_probability ? (hr.precipitation_probability[hIdx] || 0) : 0;
+        var hCode = hr.weather_code ? hr.weather_code[hIdx] : 1;
+        var hIsDay = (hr.is_day && hr.is_day[hIdx] !== undefined) ? hr.is_day[hIdx] : (parseInt(hHourStr, 10) >= 6 && parseInt(hHourStr, 10) < 19 ? 1 : 0);
+
         var hInfo = getWeatherInfo(hCode, hIsDay);
         var hColor = getTempColor(hTemp);
 
         colsHtml += '<div class="col-item">' +
-          '<div class="col-title">Ore ' + hHour + '</div>' +
+          '<div class="col-title">Ore ' + hHourStr + '</div>' +
           '<div class="col-icon">' + renderIcon(hInfo.type, 38) + '</div>' +
           '<div class="col-temps" style="color:' + hColor + ';">' + hTemp + '°</div>' +
           '<div class="col-pop">' + hPop + '%</div>' +
@@ -611,6 +628,11 @@
 
     fetchWeatherData();
     setInterval(fetchWeatherData, 5 * 60 * 1000);
+
+    // Ricarica anti-crash RAM ogni 6 ore
+    setTimeout(function () {
+      location.reload();
+    }, 6 * 60 * 60 * 1000);
   </script>
 </body>
 </html>
