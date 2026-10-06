@@ -302,7 +302,7 @@
       return dirs[idx];
     }
 
-function getMoonPhase(date) {
+    function getMoonPhase(date) {
       if (!date) date = new Date();
       var y = date.getFullYear();
       var m = date.getMonth() + 1;
@@ -315,7 +315,6 @@ function getMoonPhase(date) {
       jd /= 29.5305882;
       var frac = jd - Math.floor(jd);
 
-      // Disco pieno grigio ardesia visibile e sagoma della luna
       var bg = '<circle cx="16" cy="16" r="13" fill="#334155"/>';
       var svgStart = '<svg width="22" height="22" viewBox="0 0 32 32" style="vertical-align: -3px; margin: 0 8px 0 14px; display: inline-block;">';
       var svgEnd = '</svg>';
@@ -600,8 +599,37 @@ function getMoonPhase(date) {
     } catch (e) {}
 
     function fetchWeatherData() {
-      var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
+      var bust = '&_t=' + new Date().getTime();
+      var apiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=41.1171&longitude=16.8719&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum&timezone=Europe%2FRome&models=best_match' + bust;
 
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', apiUrl, true);
+        xhr.timeout = 7000;
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                var data = JSON.parse(xhr.responseText);
+                renderWeather(data);
+              } catch (e) {
+                fallbackGitHub();
+              }
+            } else {
+              fallbackGitHub();
+            }
+          }
+        };
+        xhr.ontimeout = function() { fallbackGitHub(); };
+        xhr.onerror = function() { fallbackGitHub(); };
+        xhr.send();
+      } catch (err) {
+        fallbackGitHub();
+      }
+    }
+
+    function fallbackGitHub() {
+      var bust = 'r=' + Math.random() + '&t=' + new Date().getTime();
       var oldScript = document.getElementById('weather-script-tag');
       if (oldScript && oldScript.parentNode) {
         oldScript.parentNode.removeChild(oldScript);
@@ -609,33 +637,16 @@ function getMoonPhase(date) {
       var script = document.createElement('script');
       script.id = 'weather-script-tag';
       script.src = 'https://paxos70.github.io/meteogemini-bari/weather.js?' + bust;
-      
       script.onload = function() {
         if (window.METEO_DATA) {
           renderWeather(window.METEO_DATA);
         }
       };
-      
-      script.onerror = function() {
-        try {
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', 'https://paxos70.github.io/meteogemini-bari/weather.json?' + bust, true);
-          xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-              try {
-                renderWeather(JSON.parse(xhr.responseText));
-              } catch (e) {}
-            }
-          };
-          xhr.send();
-        } catch (err) {}
-      };
-      
       document.head.appendChild(script);
     }
 
-    setTimeout(fetchWeatherData, 800);
-    setInterval(fetchWeatherData, 5 * 60 * 1000);
+    setTimeout(fetchWeatherData, 500);
+    setInterval(fetchWeatherData, 10 * 60 * 1000);
   </script>
 </body>
 </html>
